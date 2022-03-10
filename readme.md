@@ -1,5 +1,9 @@
+### Demo
+https://aknow2.github.io/go2standup/
+
 
 ### Getting started
-- cargo install trunk
-- rustup target add wasm32-unknown-unknown
-- trunk serve --open
+1.  `cd app`
+2. `cargo install trunk`
+3. `rustup target add wasm32-unknown-unknown`
+4. `trunk serve --open`
