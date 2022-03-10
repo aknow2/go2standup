@@ -164,8 +164,6 @@ fn app() -> Html {
         );
     }
 
-
-
     let update_members = |
             members: &UseStateHandle<Members>,
             new_member_name: &UseStateHandle<String>
@@ -187,6 +185,7 @@ fn app() -> Html {
             update_members(&members, &new_member_name);
         })
     };
+
     let clear_member = {
         let members = members.clone();
         Callback::from(move |member: Member| {
@@ -196,6 +195,7 @@ fn app() -> Html {
             members.set(vecm);
         })
     };
+
     let start_meeting = {
         let status = meeting_status.clone();
         let members = members.clone();
@@ -209,6 +209,7 @@ fn app() -> Html {
             attended_members.set(member_list);
         })
     };
+
     let back = {
         let status = meeting_status.clone();
 
@@ -216,6 +217,7 @@ fn app() -> Html {
             status.set(Status::Preparing);
         })
     };
+
     let on_keydown = {
         let members = members.clone();
         let new_member_name = new_member_name.clone();
