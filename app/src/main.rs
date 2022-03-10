@@ -6,36 +6,57 @@ use serde::{ Serialize, Deserialize };
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 struct Member {
-    id: usize,
-    name: String,
+    pub id: usize,
+    pub name: String,
 }
 
 type Members = Vec<Member>;
 
 #[derive(Properties, PartialEq)]
 struct MembersListProps {
-    members: Members,
-    on_remove: Callback<Member>
+    pub members: Members,
+    pub on_remove: Callback<Member>
 }
 
-fn save_members(members: &Members) {
-    let window = window().unwrap();
-    if let Ok(Some(storage)) =  window.local_storage() {
-        let text = serde_json::to_string(&members).unwrap();
-        log::info!("Result: {:?}", text);
-        storage.set_item("members", &text).unwrap();
-    } 
+struct Repository {
+    storage: web_sys::Storage,
 }
 
-fn fetch_members() -> Members {
-    let window = window().unwrap();
-    if let Ok(Some(storage)) =  window.local_storage() {
-        let text = storage.get_item("members").unwrap().unwrap_or_else(|| String::from("[]"));
-        let result = serde_json::from_str::<Members>(&text).expect("");
-        log::info!("Result: {:?}", result);
+impl Repository {
+    pub fn new() -> Option<Repository> {
+        let window = window().unwrap();
+
+        if let Ok(Some(storage)) =  window.local_storage(){
+            Some(Repository {
+                storage,
+            })
+        } else {
+            None
+        }
+    }
+
+    pub fn save_members(&self, members: &Members) {
+        let text = serde_json::to_string(members).unwrap();
+        log::info!("save_members: {:?}", text);
+        self.storage.set_item("members", &text).unwrap();
+    }
+
+    pub fn fetch_members(&self) -> Members {
+        let text = self.storage.get_item("members").unwrap().unwrap_or_else(|| String::from("[]"));
+        let result = serde_json::from_str::<Members>(&text).unwrap_or_else(|_| Vec::new());
+        log::info!("fetch_members: {:?}", result);
         result
-    } else {
-        vec![]
+    }
+
+    pub fn save_memo(&self, memo: &str) {
+        log::info!("save_memo: {:?}", memo);
+        self.storage.set_item("memo", memo).unwrap();
+    }
+
+    pub fn fetch_memo(&self) -> String {
+        let memo = self.storage.get_item("memo").unwrap().unwrap_or_else(|| String::from(""));
+        log::info!("fetch_memo: {:?}", memo);
+        memo
     }
 }
 
@@ -73,10 +94,40 @@ enum Status {
 
 #[function_component(App)]
 fn app() -> Html {
-    let members: UseStateHandle<Members> = use_state(fetch_members);
+    let repository: UseStateHandle<Option<Repository>> = use_state(|| None);
+    let members: UseStateHandle<Members> = use_state(Vec::new);
     let attended_members: UseStateHandle<Members> = use_state(Vec::new);
     let new_member_name: UseStateHandle<String>= use_state(|| String::from(""));
+    let memo: UseStateHandle<String>= use_state(|| String::from(""));
     let meeting_status = use_state(|| Status::Preparing);
+    {
+        let repository = repository.clone();
+        let members = members.clone();
+        use_effect_with_deps(
+            move |members| {
+                if let Some(repo) = &*repository {
+                    repo.save_members(members);
+                }
+                ||()
+            },
+            members,
+        )
+    }
+
+    {
+        let repository = repository.clone();
+        let memo = memo.clone();
+        use_effect_with_deps(
+            move |memo| {
+                if let Some(repo) = &*repository {
+                    repo.save_memo(&*memo);
+                }
+                || ()
+            },
+            memo,
+        );
+    }
+
     let on_change_member_name = {
         let member_name = new_member_name.clone();
         Callback::from(move |e: InputEvent| {
@@ -86,6 +137,34 @@ fn app() -> Html {
             member_name.set(val);
         })
     };
+    let on_change_memo = {
+        let memo = memo.clone();
+        Callback::from(move |e: Event| {
+            let target = e.target().expect("Event should have a target when dispatched");
+            let val = target.unchecked_into::<HtmlInputElement>().value();
+            memo.set(val);
+        })
+    };
+
+
+    {
+        let members = members.clone();
+        let memo = memo.clone();
+        use_effect_with_deps(
+            move |_| {
+                let repo = Repository::new();
+                if let Some(repo) = repo {
+                    members.set(repo.fetch_members());
+                    memo.set(repo.fetch_memo());
+                    repository.set(Some(repo));
+                }
+                || ()
+            },
+            (),
+        );
+    }
+
+
 
     let update_members = |
             members: &UseStateHandle<Members>,
@@ -96,7 +175,6 @@ fn app() -> Html {
             id: members.len(),
             name: new_member_name.to_string(),
         });
-        save_members(&vec_members);
         members.set(vec_members);
         new_member_name.set(String::from(""));
         log::info!("Update: {:?} {:?}", new_member_name.to_string(), members.len());
@@ -115,7 +193,6 @@ fn app() -> Html {
             let mut vecm = members.to_vec();
             let index = vecm.iter().position(|x| x.id == member.id).unwrap();
             vecm.remove(index);
-            save_members(&vecm);
             members.set(vecm);
         })
     };
@@ -220,7 +297,11 @@ fn app() -> Html {
                     </div>
                     <div class="column">
                         <div class="is-size-4">{ "Meeting memo" }</div>
-                        <textarea class="textarea" rows="10"></textarea>
+                        <textarea
+                            class="textarea" rows="10"
+                            value={memo.to_string()}
+                            onchange={on_change_memo}
+                        ></textarea>
                     </div>
                 </div>
             </div>

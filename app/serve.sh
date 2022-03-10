@@ -1,3 +1,3 @@
 #!/bin/sh
 
-trunk serve --dist ./dist --public-url / --port 7000
+trunk serve --dist ./dist --public-url / --port 6060
