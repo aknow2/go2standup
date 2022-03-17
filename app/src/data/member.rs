@@ -2,7 +2,7 @@ use serde::{ Serialize, Deserialize };
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct Member {
-    pub id: usize,
+    pub id: String,
     pub name: String,
 }
 

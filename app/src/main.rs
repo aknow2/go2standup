@@ -6,22 +6,48 @@ use yew::prelude::*;
 use rand::prelude::SliceRandom;
 use repository::local_repository::Repository;
 use components::prepare_members:: { PrepareMembers };
-use components::meeting:: { Meeting };
+use components::parking_lot:: { ParkingLot };
 use components::header:: { Header };
-
-enum Status {
-    Preparing,
-    Meeting,
-}
+use gloo_timers::callback::Timeout;
 
 #[function_component(App)]
 fn app() -> Html {
     let repository: UseStateHandle<Option<Repository>> = use_state(|| None);
     let members: UseStateHandle<data::member::Members> = use_state(Vec::new);
-    let attended_members: UseStateHandle<data::member::Members> = use_state(Vec::new);
     let new_member_name: UseStateHandle<String>= use_state(|| String::from(""));
     let memo: UseStateHandle<String>= use_state(|| String::from(""));
-    let meeting_status = use_state(|| Status::Preparing);
+    let leader_id: UseStateHandle<Option<String>>= use_state(|| None);
+    let loot_time = use_state(|| u32::MAX);
+
+    {
+        let leader_id = leader_id.clone();
+        let members = members.clone();
+        let loot_time = loot_time.clone();
+        use_effect(move || {
+                log::info!("Looting");
+                let leader_id = leader_id.clone();
+                let members = members.clone();
+                Timeout::new(*loot_time, move || {
+                    log::info!("Timeout {:?}", members.len());
+                    if *loot_time < 420 {
+                        let mut rng = rand::thread_rng();
+                        let mut member_list = members.to_vec();
+                        member_list.shuffle(&mut rng);
+
+                        if let Some(member) = member_list.pop() {
+                            log::info!("Leader id: {:?}", member.id);
+                            leader_id.set(Some(member.id));
+                        }
+
+                        let time = ((*loot_time as f64) * 1.1) as u32;
+                        loot_time.set(time);
+                    }
+                }).forget();
+                || ()
+            }
+        );
+    }
+
     {
         let repository = repository.clone();
         let members = members.clone();
@@ -87,7 +113,7 @@ fn app() -> Html {
         | {
         let mut vec_members = members.to_vec();
         vec_members.push(data::member::Member {
-            id: members.len(),
+            id: uuid::Uuid::new_v4().to_string(),
             name: new_member_name.to_string(),
         });
         members.set(vec_members);
@@ -113,52 +139,49 @@ fn app() -> Html {
         })
     };
 
-    let start_meeting = {
-        let status = meeting_status.clone();
+    let shuffle_members = {
         let members = members.clone();
-        let attended_members = attended_members;
-
         Callback::from(move |_| {
             let mut rng = rand::thread_rng();
             let mut member_list = members.to_vec();
             member_list.shuffle(&mut rng);
-            status.set(Status::Meeting);
-            attended_members.set(member_list);
+            log::info!("Shuffle: {:?}", member_list.to_vec());
+            members.set(member_list);
         })
     };
 
-    let back = {
-        let status = meeting_status.clone();
+    let loot_leader = {
         Callback::from(move |_| {
-            status.set(Status::Preparing);
+            log::info!("Start loot ");
+            loot_time.set(10);
         })
-    };
-
-    let content = match *meeting_status {
-        Status::Preparing => html! {
-            <PrepareMembers
-                members={members.to_vec()}
-                new_member_name={new_member_name.to_string()}
-                on_change_new_member_name={on_change_member_name}
-                on_remove={remove_member}
-                on_add_member={add_member}
-                on_start_meeting={start_meeting}
-            />
-        },
-        Status::Meeting => html! {
-            <Meeting 
-                members={members.to_vec()}
-                on_back={back}
-                memo={memo.to_string()}
-                on_change_memo={on_change_memo}
-            />
-        },
     };
 
     html! {
         <div>
             <Header />
-            { content }
+            <div class="container is-max-widescreen">
+                <div class="columns  is-centered my-2">
+                    <div class="column">
+                        <PrepareMembers
+                            leader_id={(*leader_id).clone()}
+                            members={members.to_vec()}
+                            new_member_name={new_member_name.to_string()}
+                            on_change_new_member_name={on_change_member_name}
+                            on_remove={remove_member}
+                            on_add_member={add_member}
+                            on_shuffle={shuffle_members}
+                            on_loot_leader={loot_leader}
+                        />
+                    </div>
+                    <div class="column">
+                        <ParkingLot
+                            memo={memo.to_string()}
+                            on_change_memo={on_change_memo}
+                        />
+                    </div>
+                </div>
+            </div>
         </div>
     }
 }
