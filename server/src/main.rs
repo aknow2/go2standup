@@ -7,7 +7,7 @@ use actix_web::{guard, web, App, HttpResponse, HttpServer};
 use async_graphql::http::{playground_source, GraphQLPlaygroundConfig, MultipartOptions};
 use async_graphql::{EmptySubscription, Schema};
 use async_graphql_actix_web::{GraphQLRequest, GraphQLResponse};
-use crate::models::meeting::{MeetingSchema, MutationRoot, QueryRoot};
+use crate::models::meeting::{MeetingSchema, MutationRoot, QueryRoot, Storage};
 
 async fn index(schema: web::Data<MeetingSchema>, req: GraphQLRequest) -> GraphQLResponse {
     schema.execute(req.into_inner()).await.into()
@@ -24,7 +24,7 @@ async fn main() -> std::io::Result<()> {
     let client = redis::Client::open("redis://redis/").expect("failed to open redis");
 
     let schema = Schema::build(QueryRoot, MutationRoot, EmptySubscription)
-        .data(client)
+        .data(Storage::from(client))
         .finish();
     HttpServer::new(move || {
         App::new()
