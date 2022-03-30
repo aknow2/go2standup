@@ -88,8 +88,6 @@ fn app() -> Html {
             memo.set(val);
         })
     };
-
-
     {
         let members = members.clone();
         let memo = memo.clone();
