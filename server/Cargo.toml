@@ -5,12 +5,15 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [dependencies]
-actix-web = "4"
+axum = { version = "0.4", features = ["ws", "headers"] }
 async-graphql = "3.0.35"
-async-graphql-actix-web = "3.0.35"
+async-graphql-axum = "3.0.37"
 slab = "0.4.2"
 futures = "0.3.0"
-redis = "0.21.5"
+redis = { version = "0.21.5", features = ["tokio-comp"] }
 serde_json = "1.0.79"
 serde = "1.0.136"
+async-stream = "0.3.3"
+futures-timer = "3.0.2"
 uuid = { version = "0.8", features = ["serde", "v4"] }
+tokio = { version = "1.8", features = ["macros", "rt-multi-thread"] }
