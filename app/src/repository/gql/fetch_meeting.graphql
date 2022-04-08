@@ -1,0 +1,12 @@
+query FetchMeeting($id: String!) {
+  meeting (id: $id) {
+    id
+    leaderId
+    members{
+      id
+      name
+      reaction
+    }
+    memo
+  }
+}

@@ -1,19 +1,19 @@
 mod data;
 mod components;
 mod repository;
-
 use yew::prelude::*;
 use rand::prelude::SliceRandom;
-use repository::local_repository::Repository;
+use repository::api::Repository;
 use components::prepare_members:: { PrepareMembers };
 use components::parking_lot:: { ParkingLot };
 use components::header:: { Header };
 use gloo_timers::callback::Timeout;
+use wasm_bindgen_futures::spawn_local;
 
 #[function_component(App)]
 fn app() -> Html {
     let repository: UseStateHandle<Option<Repository>> = use_state(|| None);
-    let members: UseStateHandle<data::member::Members> = use_state(Vec::new);
+    let members: UseStateHandle<data::meeting::Members> = use_state(Vec::new);
     let new_member_name: UseStateHandle<String>= use_state(|| String::from(""));
     let memo: UseStateHandle<String>= use_state(|| String::from(""));
     let leader_id: UseStateHandle<Option<String>>= use_state(|| None);
@@ -93,11 +93,20 @@ fn app() -> Html {
         let memo = memo.clone();
         use_effect_with_deps(
             move |_| {
-                let repo = Repository::new();
-                if let Some(repo) = repo {
-                    members.set(repo.fetch_members());
-                    memo.set(repo.fetch_memo());
-                    repository.set(Some(repo));
+
+                {
+                    spawn_local(async move {
+                        let search = web_sys::window().unwrap().location().search().unwrap();
+                        let params = web_sys::UrlSearchParams::new_with_str(&search).unwrap();
+                        let id = params.get("id");
+                        log::info!("Search: {:?}", id);
+                        let repo = Repository::new(id).await;
+                        if let Some(repo) = repo {
+                            members.set(repo.fetch_members());
+                            memo.set(repo.fetch_memo());
+                            repository.set(Some(repo));
+                        }
+                    });
                 }
                 || ()
             },
@@ -106,13 +115,14 @@ fn app() -> Html {
     }
 
     let update_members = |
-            members: &UseStateHandle<data::member::Members>,
+            members: &UseStateHandle<data::meeting::Members>,
             new_member_name: &UseStateHandle<String>
         | {
         let mut vec_members = members.to_vec();
-        vec_members.push(data::member::Member {
+        vec_members.push(data::meeting::Member {
             id: uuid::Uuid::new_v4().to_string(),
             name: new_member_name.to_string(),
+            reaction: data::meeting::ReactionType::NONE,
         });
         members.set(vec_members);
         new_member_name.set(String::from(""));
@@ -129,7 +139,7 @@ fn app() -> Html {
 
     let remove_member = {
         let members = members.clone();
-        Callback::from(move |member: data::member::Member| {
+        Callback::from(move |member: data::meeting::Member| {
             let mut vecm = members.to_vec();
             let index = vecm.iter().position(|x| x.id == member.id).unwrap();
             vecm.remove(index);

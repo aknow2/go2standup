@@ -1,1 +1,1 @@
-pub mod member;
+pub mod meeting;

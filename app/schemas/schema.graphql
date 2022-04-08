@@ -1,0 +1,46 @@
+enum ReactionType {
+    None,
+    Thumbup,
+    Thumbdown,
+    I,
+    II,
+    III,
+    V,
+    VIII,
+    XIII,
+}
+
+type Member {
+    id: ID!
+    name: String!
+    reaction: ReactionType!
+}
+
+type InputMember {
+    id: ID!
+    name: String!
+    reaction: ReactionType!
+}
+
+type Meeting {
+    id: ID!
+    leaderId: String
+    members: [Member!]!
+    memo: String!
+}
+
+type Query {
+  meeting(id: String): Meeting
+}
+
+type Mutation {
+    createMeeting: Meeting
+    addMember(id: String, name: String): Meeting
+    updateMember(id: String, member: InputMember): Meeting
+    removeMember(id: String, memberId: String): Meeting
+    updateMemo(id: String, memo: String): Meeting
+}
+
+type Subscription {
+  meeting(id: String): Meeting
+}

@@ -7,11 +7,11 @@ use crate::components::member_list::MembersList;
 
 #[derive(Properties, PartialEq)]
 pub struct PrepareMembersProps {
-    pub members: data::member::Members,
+    pub members: data::meeting::Members,
     pub leader_id: Option<String>,
     pub new_member_name: String,
     pub on_change_new_member_name: Callback<String>,
-    pub on_remove: Callback<data::member::Member>,
+    pub on_remove: Callback<data::meeting::Member>,
     pub on_add_member: Callback<()>,
     pub on_shuffle: Callback<()>,
     pub on_loot_leader: Callback<()>

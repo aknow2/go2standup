@@ -3,8 +3,8 @@ use crate::data;
 
 #[derive(Properties, PartialEq)]
 pub struct MembersListProps {
-    pub members: data::member::Members,
-    pub on_remove: Callback<data::member::Member>,
+    pub members: data::meeting::Members,
+    pub on_remove: Callback<data::meeting::Member>,
     pub leader_id: Option<String>,
 }
 
