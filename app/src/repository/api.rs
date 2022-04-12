@@ -1,10 +1,12 @@
 use crate::data;
+use crate::data::meeting::{Members, ErrorMsg};
 use graphql_client::{GraphQLQuery};
 use wasm_bindgen::{JsCast};
 use wasm_bindgen::JsValue;
 use wasm_bindgen_futures::JsFuture;
 use web_sys::{ Request, RequestInit, Response as Res, window, RequestMode };
 use data::meeting::{Meeting, GQLResponse, MeetingHolder, CreateMeetingHolder };
+use yew::prelude::*;
 
 
 #[derive(GraphQLQuery)]
@@ -27,7 +29,7 @@ pub struct Repository {
     storage: web_sys::Storage,
 }
 
-async fn fetch_meeting(id: String) -> Meeting {
+pub async fn fetch_meeting(id: String) -> Result<Meeting, ErrorMsg> {
     let window = window().unwrap();
     let variables = fetch_meeting::Variables {
         id: id,
@@ -48,10 +50,24 @@ async fn fetch_meeting(id: String) -> Meeting {
     let json = JsFuture::from(result_json).await.unwrap();
     let response: GQLResponse<MeetingHolder> = json.into_serde().unwrap();
 
-    return response.data.unwrap().meeting;
+    if let Some(data) = response.data {
+        let meeting = data.meeting;
+        return Ok(meeting);
+    }
+    if let Some(data) = response.errors {
+        return Err(data);
+    }
+    if let Some(data) = response.error {
+        return Err(ErrorMsg {
+            message: data,
+        });
+    }
+    Err(ErrorMsg {
+        message: String::from("Unexpected error occured"),
+    })
 }
 
-async fn create_meeting() -> Meeting {
+pub async fn create_meeting() -> Result<Meeting, ErrorMsg> {
     let window = window().unwrap();
     let variables = create_meeting::Variables {};
 
@@ -70,21 +86,26 @@ async fn create_meeting() -> Meeting {
     let json = JsFuture::from(result_json).await.unwrap();
     let response: GQLResponse<CreateMeetingHolder> = json.into_serde().unwrap();
 
-    return response.data.unwrap().create_meeting;
+    if let Some(data) = response.data {
+        let meeting = data.create_meeting;
+        return Ok(meeting);
+    }
+    if let Some(data) = response.errors {
+        return Err(data);
+    }
+    if let Some(data) = response.error {
+        return Err(ErrorMsg {
+            message: data,
+        });
+    }
+    Err(ErrorMsg {
+        message: String::from("Unexpected error occured"),
+    })
 }
 
 impl Repository {
     pub async fn new(id: Option<String>) -> Option<Repository> {
-        let window = window().unwrap();
-
-        let meeting = match id {
-            Some(id) => fetch_meeting(id).await,
-            None => create_meeting().await,
-        };
-
-        log::info!("meeting {:?}", meeting);
-
-        if let Ok(Some(storage)) =  window.local_storage(){
+        if let Ok(Some(storage)) =  window().unwrap().local_storage(){
             Some(Repository {
                 storage,
             })

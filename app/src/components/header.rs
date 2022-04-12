@@ -12,4 +12,3 @@ pub fn members_list() -> Html {
       </nav>
     }
 }
-

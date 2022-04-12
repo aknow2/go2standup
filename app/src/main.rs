@@ -1,6 +1,7 @@
 mod data;
 mod components;
 mod repository;
+mod ctx;
 use yew::prelude::*;
 use rand::prelude::SliceRandom;
 use repository::api::Repository;
@@ -8,10 +9,13 @@ use components::prepare_members:: { PrepareMembers };
 use components::parking_lot:: { ParkingLot };
 use components::header:: { Header };
 use gloo_timers::callback::Timeout;
-use wasm_bindgen_futures::spawn_local;
+use ctx::meeting::{MeetingProvider, MeetingContext, MeetingActions};
 
 #[function_component(App)]
 fn app() -> Html {
+    let meeting_ctx = use_context::<MeetingContext>().expect("no ctx found");
+    log::info!("{:?}", meeting_ctx.state);
+
     let repository: UseStateHandle<Option<Repository>> = use_state(|| None);
     let members: UseStateHandle<data::meeting::Members> = use_state(Vec::new);
     let new_member_name: UseStateHandle<String>= use_state(|| String::from(""));
@@ -83,30 +87,21 @@ fn app() -> Html {
         })
     };
     let on_change_memo = {
-        let memo = memo.clone();
+        let ctx = meeting_ctx.clone();
         Callback::from(move |val| {
-            memo.set(val);
+            ctx.dispatch(MeetingActions::UpdateMemo(val));
         })
     };
     {
-        let members = members.clone();
-        let memo = memo.clone();
+        let ctx = meeting_ctx.clone();
         use_effect_with_deps(
             move |_| {
-
                 {
-                    spawn_local(async move {
-                        let search = web_sys::window().unwrap().location().search().unwrap();
-                        let params = web_sys::UrlSearchParams::new_with_str(&search).unwrap();
-                        let id = params.get("id");
-                        log::info!("Search: {:?}", id);
-                        let repo = Repository::new(id).await;
-                        if let Some(repo) = repo {
-                            members.set(repo.fetch_members());
-                            memo.set(repo.fetch_memo());
-                            repository.set(Some(repo));
-                        }
-                    });
+                    let search = web_sys::window().unwrap().location().search().unwrap();
+                    let params = web_sys::UrlSearchParams::new_with_str(&search).unwrap();
+                    let id = params.get("id");
+                    log::info!("Search: {:?}", id);
+                    ctx.dispatch(MeetingActions::StartMeeting(id));
                 }
                 || ()
             },
@@ -130,20 +125,21 @@ fn app() -> Html {
     };
 
     let add_member = {
-        let members = members.clone();
         let new_member_name = new_member_name.clone();
+        let ctx = meeting_ctx.clone();
         Callback::from(move |_| {
-            update_members(&members, &new_member_name);
+            ctx.dispatch(MeetingActions::AddMember(new_member_name.to_string()));
         })
     };
 
     let remove_member = {
         let members = members.clone();
+        let ctx = meeting_ctx.clone();
         Callback::from(move |member: data::meeting::Member| {
+            ctx.dispatch(MeetingActions::RemoveMember(member.id.to_string()));
             let mut vecm = members.to_vec();
             let index = vecm.iter().position(|x| x.id == member.id).unwrap();
             vecm.remove(index);
-            members.set(vecm);
         })
     };
 
@@ -159,7 +155,9 @@ fn app() -> Html {
     };
 
     let loot_leader = {
+        let ctx = meeting_ctx.clone();
         Callback::from(move |_| {
+            ctx.dispatch(MeetingActions::LootLeader);
             log::info!("Start loot ");
             loot_time.set(10);
         })
@@ -194,7 +192,16 @@ fn app() -> Html {
     }
 }
 
+#[function_component(Root)]
+fn root() -> Html {
+    html! {
+        <MeetingProvider>
+            <App></App>
+        </MeetingProvider>
+    }
+}
+
 fn main() {
     wasm_logger::init(wasm_logger::Config::default());
-    yew::start_app::<App>();
+    yew::start_app::<Root>();
 }
