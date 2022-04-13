@@ -1,6 +1,6 @@
 use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
-use crate::{data::meeting:: { Meeting, Member, ErrorMsg }, repository::{storage::{get_meeting_id, set_meeting_id}, api::{fetch_meeting, create_meeting}}};
+use crate::{data::meeting:: { Meeting, Member, ErrorMsg }, repository::{storage::{get_meeting_id, set_meeting_id}, api::{fetch_meeting, create_meeting, add_member, MeetingResult, remove_member, update_memo}}};
 
 pub enum MeetingActions {
     StartMeeting(Option<String>),
@@ -64,8 +64,35 @@ impl MeetingContext {
         }
     }
 
+    fn received_meeting_result(&self, result: MeetingResult) {
+        let state = self.state.clone();
+        match result {
+            Ok(meeting) => {
+                log::info!("{:?}", meeting);
+                state.set(MeetingState {
+                    id: meeting.id,
+                    members: meeting.members,
+                    memo: meeting.memo,
+                    leader_id: state.leader_id.clone(),
+                    error_msg: None,
+                })
+            },
+            Err(msg) => {
+                log::error!("{:?}", msg);
+                state.set(MeetingState {
+                    id: state.id.to_string(),
+                    members: state.members.to_vec(),
+                    memo: state.memo.to_string(),
+                    leader_id: state.leader_id.clone(),
+                    error_msg: Some(msg),
+                })
+            },
+        }
+    }
+
     pub fn dispatch(&self, action: MeetingActions) {
         let state = self.state.clone();
+        let my = self.clone();
         spawn_local( async move  {
             match action {
                 MeetingActions::StartMeeting(id) => {
@@ -74,13 +101,24 @@ impl MeetingContext {
                         state.set(new_state);
                 },
                 MeetingActions::AddMember(name) => {
-                    log::info!("add member {:?}", name);
+                    let result = add_member(state.id.clone(), name).await;
+                    my.received_meeting_result(result);
                 },
-                MeetingActions::RemoveMember(id) => {
-                    log::info!("remove member {:?}", id);
+                MeetingActions::RemoveMember(member_id) => {
+                    log::info!("remove member {:?}", member_id);
+                    let result = remove_member(
+                        state.id.clone(),
+                        member_id,
+                    ).await;
+                    my.received_meeting_result(result);
                 },
                 MeetingActions::UpdateMemo(memo) => {
                     log::info!("update memo {:?}", memo);
+                    let result = update_memo(
+                        state.id.clone(),
+                        memo,
+                    ).await;
+                    my.received_meeting_result(result);
                 },
                 MeetingActions::LootLeader => {
                     log::info!("Loot leader");

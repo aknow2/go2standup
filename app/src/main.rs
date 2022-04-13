@@ -15,9 +15,10 @@ fn app() -> Html {
     let meeting_ctx = use_context::<MeetingContext>().expect("no ctx found");
     log::info!("{:?}", meeting_ctx.state);
 
-    let members: UseStateHandle<data::meeting::Members> = use_state(Vec::new);
+    let state = meeting_ctx.state.clone();
+    let members = state.members.to_vec();
     let new_member_name: UseStateHandle<String>= use_state(|| String::from(""));
-    let memo: UseStateHandle<String>= use_state(|| String::from(""));
+    let memo = state.memo.to_string();
     let leader_id: UseStateHandle<Option<String>>= use_state(|| None);
     let loot_time = use_state(|| u32::MAX);
 
@@ -50,26 +51,6 @@ fn app() -> Html {
         );
     }
 
-    {
-        let members = members.clone();
-        use_effect_with_deps(
-            move |members| {
-                ||()
-            },
-            members,
-        )
-    }
-
-    {
-        let memo = memo.clone();
-        use_effect_with_deps(
-            move |memo| {
-                || ()
-            },
-            memo,
-        );
-    }
-
     let on_change_member_name = {
         let member_name = new_member_name.clone();
         Callback::from(move |val: String| {
@@ -78,8 +59,8 @@ fn app() -> Html {
     };
     let on_change_memo = {
         let ctx = meeting_ctx.clone();
-        Callback::from(move |val| {
-            ctx.dispatch(MeetingActions::UpdateMemo(val));
+        Callback::from(move |memo| {
+            ctx.dispatch(MeetingActions::UpdateMemo(memo));
         })
     };
     {
@@ -99,26 +80,12 @@ fn app() -> Html {
         );
     }
 
-    let update_members = |
-            members: &UseStateHandle<data::meeting::Members>,
-            new_member_name: &UseStateHandle<String>
-        | {
-        let mut vec_members = members.to_vec();
-        vec_members.push(data::meeting::Member {
-            id: uuid::Uuid::new_v4().to_string(),
-            name: new_member_name.to_string(),
-            reaction: data::meeting::ReactionType::NONE,
-        });
-        members.set(vec_members);
-        new_member_name.set(String::from(""));
-        log::info!("Update: {:?} {:?}", new_member_name.to_string(), members.len());
-    };
-
     let add_member = {
         let new_member_name = new_member_name.clone();
         let ctx = meeting_ctx.clone();
         Callback::from(move |_| {
             ctx.dispatch(MeetingActions::AddMember(new_member_name.to_string()));
+            new_member_name.set(String::from(""))
         })
     };
 
@@ -140,7 +107,7 @@ fn app() -> Html {
             let mut member_list = members.to_vec();
             member_list.shuffle(&mut rng);
             log::info!("Shuffle: {:?}", member_list.to_vec());
-            members.set(member_list);
+            // members.set(member_list);
         })
     };
 
@@ -172,7 +139,7 @@ fn app() -> Html {
                     </div>
                     <div class="column">
                         <ParkingLot
-                            memo={memo.to_string()}
+                            memo={memo}
                             on_change_memo={on_change_memo}
                         />
                     </div>

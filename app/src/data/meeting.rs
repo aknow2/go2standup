@@ -50,6 +50,30 @@ pub struct CreateMeetingHolder {
 }
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct AddMemberHolder {
+    pub add_member: Meeting,
+}
+
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct RemoveMemberHolder {
+    pub remove_member: Meeting,
+}
+
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateMemberHolder {
+    pub update_member: Meeting,
+}
+
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateMemoHolder {
+    pub update_memo: Meeting,
+}
+
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct  ErrorMsg {
     pub message: String,
 }
