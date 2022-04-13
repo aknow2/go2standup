@@ -4,9 +4,11 @@ mod models;
 use async_graphql::http::{playground_source, GraphQLPlaygroundConfig};
 use async_graphql::Schema;
 use async_graphql_axum::{GraphQLRequest, GraphQLResponse, GraphQLSubscription};
+use axum::http::Method;
 use axum::response::{self, IntoResponse};
 use axum::routing::get;
 use axum::{extract::Extension, Router, Server};
+use tower_http::cors::{CorsLayer, Any};
 use crate::models::meeting::{MeetingSchema, MutationRoot, QueryRoot, SubscriptionRoot, Storage};
 
 
@@ -31,6 +33,11 @@ async fn main() {
     let app = Router::new()
     .route("/", get(graphql_playground).post(graphql_handler))
     .route("/ws", GraphQLSubscription::new(schema.clone()))
+    .layer(
+        CorsLayer::new()
+            .allow_origin(Any)
+            .allow_methods(vec![Method::GET, Method::POST, Method::OPTIONS, Method::HEAD]),
+    )
     .layer(Extension(schema));
 
     println!("Playground: http://localhost:7070");

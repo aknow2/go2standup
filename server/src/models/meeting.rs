@@ -52,10 +52,12 @@ impl QueryRoot {
         let storage = ctx.data_unchecked::<Storage>().lock().await;
         let mut conn = storage
             .get_connection()
-            .expect( "Failed to connect storage");
-        let data: String = conn.get(id).expect("Not found meeting");
+            .or_else(|_| Err(String::from("Failed to connect storage")))?;
+        let data: String = conn.get(id)
+            .or_else(|_| Err(String::from("Invalid meeting id")))?;
         print!("This data {:?}", data);
-        let meeting: Meeting = serde_json::from_str(&data).expect("failed to convert Meeting");
+        let meeting: Meeting = serde_json::from_str(&data)
+            .or_else(|_| Err(String::from("failed to convert Meeting")))?;
         Ok(meeting)
     }
 }

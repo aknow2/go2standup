@@ -1110,6 +1110,7 @@ dependencies = [
  "serde_json",
  "slab",
  "tokio",
+ "tower-http",
  "uuid",
 ]
 
