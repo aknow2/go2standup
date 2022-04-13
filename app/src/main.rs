@@ -4,7 +4,6 @@ mod repository;
 mod ctx;
 use yew::prelude::*;
 use rand::prelude::SliceRandom;
-use repository::api::Repository;
 use components::prepare_members:: { PrepareMembers };
 use components::parking_lot:: { ParkingLot };
 use components::header:: { Header };
@@ -16,7 +15,6 @@ fn app() -> Html {
     let meeting_ctx = use_context::<MeetingContext>().expect("no ctx found");
     log::info!("{:?}", meeting_ctx.state);
 
-    let repository: UseStateHandle<Option<Repository>> = use_state(|| None);
     let members: UseStateHandle<data::meeting::Members> = use_state(Vec::new);
     let new_member_name: UseStateHandle<String>= use_state(|| String::from(""));
     let memo: UseStateHandle<String>= use_state(|| String::from(""));
@@ -53,13 +51,9 @@ fn app() -> Html {
     }
 
     {
-        let repository = repository.clone();
         let members = members.clone();
         use_effect_with_deps(
             move |members| {
-                if let Some(repo) = &*repository {
-                    repo.save_members(members);
-                }
                 ||()
             },
             members,
@@ -67,13 +61,9 @@ fn app() -> Html {
     }
 
     {
-        let repository = repository.clone();
         let memo = memo.clone();
         use_effect_with_deps(
             move |memo| {
-                if let Some(repo) = &*repository {
-                    repo.save_memo(&*memo);
-                }
                 || ()
             },
             memo,

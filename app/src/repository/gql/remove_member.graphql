@@ -1,0 +1,11 @@
+mutation RemoveMember($id: String!, $memberId: String!){
+  removeMember (id: $id, memberId: $memberId) {
+    id
+    members{
+      id
+      name
+      reaction
+    }
+    memo
+  }
+}

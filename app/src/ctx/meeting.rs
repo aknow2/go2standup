@@ -58,6 +58,7 @@ pub struct MeetingContext {
 
 impl MeetingContext {
     fn new(state: UseStateHandle<MeetingState>) -> MeetingContext {
+
         MeetingContext {
             state,
         }
@@ -105,7 +106,7 @@ pub fn meeting_provider(props: &MeetingProviderProps) -> Html {
         error_msg: None,
     });
 
-    let model = MeetingContext::new(state.clone());
+    let model = MeetingContext::new(state);
     html! {
         <ContextProvider<MeetingContext> context={model}>
             {props.children.clone()}

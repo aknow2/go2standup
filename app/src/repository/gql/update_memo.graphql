@@ -1,0 +1,14 @@
+mutation UpdateMemo($id: String!, $memo: String!) {
+  updateMemo (
+    id: $id, 
+    memo: $memo) {
+    id
+    leaderId
+    members{
+      id
+      name
+      reaction
+    }
+    memo
+  }
+}

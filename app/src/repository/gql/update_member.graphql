@@ -1,0 +1,18 @@
+mutation UpdateMember($id: String!, $memberId: String!, $name: String!, $reaction: ReactionType!) {
+  updateMember (
+    id: $id, 
+    member: {
+      id: $memberId,
+      name: $name,
+      reaction: $reaction
+    }) {
+    id
+    leaderId
+    members{
+      id
+      name
+      reaction
+    }
+    memo
+  }
+}
