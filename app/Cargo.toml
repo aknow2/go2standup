@@ -21,6 +21,8 @@ futures = "0.3.21"
 [dependencies.web-sys]
 version = "0.3.56"
 features = [
+  'WebSocket',
+  'MessageEvent',
   'Headers',
   'Request',
   'RequestInit',
@@ -32,4 +34,3 @@ features = [
   'Location',
   'UrlSearchParams',
 ]
-

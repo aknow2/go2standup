@@ -9,6 +9,7 @@ use components::parking_lot:: { ParkingLot };
 use components::header:: { Header };
 use gloo_timers::callback::Timeout;
 use ctx::meeting::{MeetingProvider, MeetingContext, MeetingActions};
+use crate::repository::api::subscribe_meeting;
 
 #[function_component(App)]
 fn app() -> Html {
@@ -160,5 +161,6 @@ fn root() -> Html {
 
 fn main() {
     wasm_logger::init(wasm_logger::Config::default());
+    subscribe_meeting("88c08943-6f66-47dd-8138-416f840b8229");
     yew::start_app::<Root>();
 }

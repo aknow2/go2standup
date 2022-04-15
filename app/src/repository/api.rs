@@ -1,10 +1,12 @@
 use crate::data;
 use crate::data::meeting::{ErrorMsg, AddMemberHolder, Member, RemoveMemberHolder, UpdateMemberHolder, UpdateMemoHolder, ReactionType};
+use crate::repository::gql_protocol::{connection_init_msg, subscribe_msg};
 use graphql_client::{GraphQLQuery};
+use wasm_bindgen::prelude::Closure;
 use wasm_bindgen::{JsCast};
 use wasm_bindgen::JsValue;
 use wasm_bindgen_futures::JsFuture;
-use web_sys::{ Request, RequestInit, Response as Res, window, RequestMode };
+use web_sys::{ Request, RequestInit, Response as Res, window, RequestMode, WebSocket, MessageEvent };
 use data::meeting::{Meeting, GQLResponse, MeetingHolder, CreateMeetingHolder };
 
 async fn post(query: serde_json::Value) -> JsValue {
@@ -165,4 +167,50 @@ pub async fn update_memo(id: String, memo: String) -> MeetingResult {
     let json = post(query).await;
     let response: GQLResponse<UpdateMemoHolder> = json.into_serde().unwrap();
     parse_response(response, |d| d.update_memo)
+}
+
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "schemas/schema.graphql",
+    query_path = "src/repository/gql/subscription_meeting.graphql",
+    response_derives = "Debug"
+)]
+struct SubscribeMeeting;
+pub fn subscribe_meeting(id: &'static str) {
+
+    let ws = WebSocket::new_with_str("ws://localhost:7070/ws", "graphql-ws").unwrap();
+    let onmessage_callback = Closure::wrap(
+    Box::new(move |e: MessageEvent| {
+                log::info!("{:?}", e.data());
+        }) as Box<dyn FnMut(MessageEvent)>
+    );
+    ws.set_onmessage(Some(onmessage_callback.as_ref().unchecked_ref()));
+    onmessage_callback.forget();
+
+    let cloned_ws = ws.clone();
+    let onopen_callback = Closure::wrap(Box::new(move |_| {
+        let variables = subscribe_meeting::Variables {
+            id: id.to_string(),
+        };
+        let build_query = SubscribeMeeting::build_query(variables);
+        let query = serde_json::json!(build_query);
+        log::info!("socket opened");
+        match cloned_ws.send_with_str(&connection_init_msg(None).to_string()) {
+            Ok(_) => log::info!("message successfully sent"),
+            Err(err) => log::info!("error sending message: {:?}", err),
+        }
+        match cloned_ws.send_with_str(&subscribe_msg("2", query).to_string()) {
+            Ok(_) => log::info!("message successfully sent"),
+            Err(err) => log::info!("error sending message: {:?}", err),
+        }
+    }) as Box<dyn FnMut(JsValue)>);
+    ws.set_onopen(Some(onopen_callback.as_ref().unchecked_ref()));
+    onopen_callback.forget();
+
+    let onerror_callback = Closure::wrap(Box::new(move |er| {
+        log::error!("socket error {:?}", er);
+    }) as Box<dyn FnMut(JsValue)>);
+    ws.set_onerror(Some(onerror_callback.as_ref().unchecked_ref()));
+
+
 }

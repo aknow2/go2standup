@@ -25,7 +25,7 @@ async fn start_meeting(query_id: Option<String>, current: &MeetingState) -> Meet
     match result {
         Ok(meeting) => {
             set_meeting_id(&meeting.id);
-            MeetingState { 
+            MeetingState {
                 id: meeting.id,
                 leader_id: meeting.leader_id,
                 members: meeting.members,
@@ -34,7 +34,7 @@ async fn start_meeting(query_id: Option<String>, current: &MeetingState) -> Meet
             }
         },
         Err(msg) => {
-            MeetingState { 
+            MeetingState {
                 error_msg: Some(msg),
                 ..current.clone()
             }
@@ -143,7 +143,7 @@ pub fn meeting_provider(props: &MeetingProviderProps) -> Html {
         memo: String::from(""),
         error_msg: None,
     });
-
+    
     let model = MeetingContext::new(state);
     html! {
         <ContextProvider<MeetingContext> context={model}>
