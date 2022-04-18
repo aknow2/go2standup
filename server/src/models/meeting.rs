@@ -1,4 +1,5 @@
 use redis::{Commands };
+use rand::prelude::SliceRandom;
 use async_graphql::*;
 use futures::{lock::Mutex, Stream };
 use futures_util::StreamExt as _;
@@ -156,6 +157,38 @@ impl MutationRoot {
             Ok(meeting)
         }).await
     }
+    async fn shuffle_members(&self,
+        ctx: &Context<'_>,
+        #[graphql(desc = "id of the meeting")] id: String,
+    ) -> CreateMeetingResult {
+        let save_memo = move |m: Meeting| {
+            let mut meeting = m.clone();
+            let mut rng = rand::thread_rng();
+            let mut member_list = meeting.members.to_vec();
+            member_list.shuffle(&mut rng);
+            meeting.members = member_list;
+            Ok(meeting)
+        };
+        save_meeting(ctx, id, save_memo).await
+    }
+    async fn new_leader(&self,
+        ctx: &Context<'_>,
+        #[graphql(desc = "id of the meeting")] id: String,
+    ) -> CreateMeetingResult {
+        let save_memo = move |m: Meeting| {
+            let mut meeting = m.clone();
+            let mut rng = rand::thread_rng();
+            let mut member_list = meeting.members.to_vec();
+            member_list.shuffle(&mut rng);
+            
+            let maybe_leader = member_list.get(0);
+            if let Some(leader) = maybe_leader {
+                meeting.leader_id = Some(leader.id.to_string());
+            }
+            Ok(meeting)
+        };
+        save_meeting(ctx, id, save_memo).await
+    }
     async fn update_memo(&self,
         ctx: &Context<'_>,
         #[graphql(desc = "id of the meeting")] id: String,
@@ -175,6 +208,9 @@ pub struct SubscriptionRoot;
 #[Subscription]
 impl SubscriptionRoot {
     async fn meeting(&self, #[graphql(desc = "Id of meeting")] id: String) -> impl Stream<Item = Result<Meeting, String>> {
+
+        println!("start subscribe {:?}", &id);
+
         let client = redis::Client::open("redis://redis/").expect("failed to open redis");
         async_stream::stream! {
             let mut pubsub_conn = client.get_async_connection().await.unwrap().into_pubsub();
@@ -182,7 +218,7 @@ impl SubscriptionRoot {
             let mut pubsub_stream = pubsub_conn.on_message();
             while let Some(next) = pubsub_stream.next().await {
                 let payload : String = next.get_payload().unwrap();
-                println!("channel meeting '{}' ", &id);
+                println!("channel meeting '{:?}' ", &id);
                 let meeting: Meeting = serde_json::from_str(&payload).unwrap();
                 yield Ok(meeting);
             }

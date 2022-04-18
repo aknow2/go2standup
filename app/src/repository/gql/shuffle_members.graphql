@@ -1,0 +1,12 @@
+mutation ShuffleMembers($id: String!) {
+  shuffleMembers(id: $id) {
+    id
+    leaderId
+    members{
+      id
+      name
+      reaction
+    }
+    memo
+  }
+}

@@ -1,6 +1,6 @@
 use crate::data;
-use crate::data::meeting::{ErrorMsg, AddMemberHolder, Member, RemoveMemberHolder, UpdateMemberHolder, UpdateMemoHolder, ReactionType};
-use crate::repository::gql_protocol::{connection_init_msg, subscribe_msg};
+use crate::data::meeting::{ErrorMsg, AddMemberHolder, Member, RemoveMemberHolder, UpdateMemberHolder, UpdateMemoHolder, ReactionType, ShuffleMembersHolder, NewLeaderHolder};
+use crate::repository::gql_protocol::{connection_init_msg, subscribe_msg, RecivedMsg};
 use graphql_client::{GraphQLQuery};
 use wasm_bindgen::prelude::Closure;
 use wasm_bindgen::{JsCast};
@@ -24,7 +24,7 @@ async fn post(query: serde_json::Value) -> JsValue {
     JsFuture::from(result_json).await.unwrap()
 }
 
-pub type MeetingResult = Result<Meeting, ErrorMsg>;
+pub type MeetingResult = Result<Meeting, Vec<ErrorMsg>>;
 type ParseResCB<T> = fn(T) -> Meeting;
 fn parse_response<T>(response: GQLResponse<T>, get_value: ParseResCB<T>)-> MeetingResult {
     if let Some(data) = response.data {
@@ -35,13 +35,19 @@ fn parse_response<T>(response: GQLResponse<T>, get_value: ParseResCB<T>)-> Meeti
         return Err(data);
     }
     if let Some(data) = response.error {
-        return Err(ErrorMsg {
-            message: data,
-        });
+        return Err(Vec::from([
+            ErrorMsg {
+                message: data,
+            },
+        ]));
     }
-    Err(ErrorMsg {
-        message: String::from("Unexpected error occured"),
-    })
+    Err(Vec::from(
+        [
+            ErrorMsg {
+                message: String::from("Unexpected error occured"),
+            }
+        ]
+    ))
 }
 
 #[derive(GraphQLQuery)]
@@ -70,7 +76,7 @@ pub async fn fetch_meeting(id: String) -> MeetingResult {
     response_derives = "Debug"
 )]
 struct CreateMeeting;
-pub async fn create_meeting() -> Result<Meeting, ErrorMsg> {
+pub async fn create_meeting() -> MeetingResult {
     let variables = create_meeting::Variables {};
     let build_query = CreateMeeting::build_query(variables);
     let query = serde_json::json!(build_query);
@@ -96,6 +102,42 @@ pub async fn add_member(id: String, name: String) -> MeetingResult {
     let json = post(query).await;
     let response: GQLResponse<AddMemberHolder> = json.into_serde().unwrap();
     parse_response(response, |d| d.add_member)
+}
+
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "schemas/schema.graphql",
+    query_path = "src/repository/gql/shuffle_members.graphql",
+    response_derives = "Debug"
+)]
+struct ShuffleMembers;
+pub async fn shuffle_members(id: String) -> MeetingResult {
+    let variables = shuffle_members::Variables {
+        id,
+    };
+    let build_query = ShuffleMembers::build_query(variables);
+    let query = serde_json::json!(build_query);
+    let json = post(query).await;
+    let response: GQLResponse<ShuffleMembersHolder> = json.into_serde().unwrap();
+    parse_response(response, |d| d.shuffle_members)
+}
+
+#[derive(GraphQLQuery)]
+#[graphql(
+    schema_path = "schemas/schema.graphql",
+    query_path = "src/repository/gql/new_leader.graphql",
+    response_derives = "Debug"
+)]
+struct NewLeader;
+pub async fn new_leader(id: String) -> MeetingResult {
+    let variables = new_leader::Variables {
+        id,
+    };
+    let build_query = NewLeader::build_query(variables);
+    let query = serde_json::json!(build_query);
+    let json = post(query).await;
+    let response: GQLResponse<NewLeaderHolder> = json.into_serde().unwrap();
+    parse_response(response, |d| d.new_leader)
 }
 
 #[derive(GraphQLQuery)]
@@ -176,41 +218,50 @@ pub async fn update_memo(id: String, memo: String) -> MeetingResult {
     response_derives = "Debug"
 )]
 struct SubscribeMeeting;
-pub fn subscribe_meeting(id: &'static str) {
+pub fn subscribe_meeting(id: String, mut cb: Box<dyn FnMut(MeetingResult)>)  {
 
     let ws = WebSocket::new_with_str("ws://localhost:7070/ws", "graphql-ws").unwrap();
-    let onmessage_callback = Closure::wrap(
-    Box::new(move |e: MessageEvent| {
-                log::info!("{:?}", e.data());
-        }) as Box<dyn FnMut(MessageEvent)>
-    );
-    ws.set_onmessage(Some(onmessage_callback.as_ref().unchecked_ref()));
-    onmessage_callback.forget();
+    {
+        let onmessage_callback = Closure::wrap(
+        Box::new(move |e: MessageEvent| {
+                log::info!("Received data {:?}", e.data());
+                let msg: RecivedMsg<MeetingHolder> = serde_json::from_str(&e.data().as_string().unwrap()).unwrap();
+                if let Some(payload) = msg.payload {
+                    cb(parse_response(payload, |holder| holder.meeting));
+                }
+            }) as Box<dyn FnMut(MessageEvent)>
+        );
+        ws.set_onmessage(Some(onmessage_callback.as_ref().unchecked_ref()));
+        onmessage_callback.forget();
+    }
 
-    let cloned_ws = ws.clone();
-    let onopen_callback = Closure::wrap(Box::new(move |_| {
-        let variables = subscribe_meeting::Variables {
-            id: id.to_string(),
-        };
-        let build_query = SubscribeMeeting::build_query(variables);
-        let query = serde_json::json!(build_query);
-        log::info!("socket opened");
-        match cloned_ws.send_with_str(&connection_init_msg(None).to_string()) {
-            Ok(_) => log::info!("message successfully sent"),
-            Err(err) => log::info!("error sending message: {:?}", err),
-        }
-        match cloned_ws.send_with_str(&subscribe_msg("2", query).to_string()) {
-            Ok(_) => log::info!("message successfully sent"),
-            Err(err) => log::info!("error sending message: {:?}", err),
-        }
-    }) as Box<dyn FnMut(JsValue)>);
-    ws.set_onopen(Some(onopen_callback.as_ref().unchecked_ref()));
-    onopen_callback.forget();
+    {
+        let cloned_ws = ws.clone();
+        let onopen_callback = Closure::wrap(Box::new(move |_| {
+            match cloned_ws.send_with_str(&connection_init_msg(None).to_string()) {
+                Ok(_) => log::info!("message successfully sent connection msg"),
+                Err(err) => log::info!("error sending message: {:?}", err),
+            }
+            let variables = subscribe_meeting::Variables {
+                id: id.to_string(),
+            };
+            let build_query = SubscribeMeeting::build_query(variables);
+            let query = serde_json::json!(build_query);
+            log::info!("socket opened");
+            let ws_id = uuid::Uuid::new_v4();
+            match cloned_ws.send_with_str(&subscribe_msg(&ws_id.to_string(), query).to_string()) {
+                Ok(_) => log::info!("message successfully sent subscribe"),
+                Err(err) => log::info!("error sending message: {:?}", err),
+            }
+        }) as Box<dyn FnMut(JsValue)>);
+        ws.set_onopen(Some(onopen_callback.as_ref().unchecked_ref()));
+        onopen_callback.forget();
+    }
+
 
     let onerror_callback = Closure::wrap(Box::new(move |er| {
         log::error!("socket error {:?}", er);
     }) as Box<dyn FnMut(JsValue)>);
     ws.set_onerror(Some(onerror_callback.as_ref().unchecked_ref()));
-
 
 }

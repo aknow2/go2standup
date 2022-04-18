@@ -57,6 +57,18 @@ pub struct AddMemberHolder {
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 #[serde(rename_all = "camelCase")]
+pub struct NewLeaderHolder {
+    pub new_leader: Meeting,
+}
+
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct ShuffleMembersHolder {
+    pub shuffle_members: Meeting,
+}
+
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct RemoveMemberHolder {
     pub remove_member: Meeting,
 }
@@ -82,5 +94,5 @@ pub struct  ErrorMsg {
 pub struct GQLResponse<T> {
     pub data: Option<T>,
     pub error: Option<String>,
-    pub errors: Option<ErrorMsg>
+    pub errors: Option<Vec<ErrorMsg>>
 }

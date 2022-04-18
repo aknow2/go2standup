@@ -39,6 +39,8 @@ type Mutation {
     updateMember(id: String, member: InputMember): Meeting
     removeMember(id: String, memberId: String): Meeting
     updateMemo(id: String, memo: String): Meeting
+    shuffleMembers(id: String): Meeting
+    newLeader(id: String): Meeting
 }
 
 type Subscription {
