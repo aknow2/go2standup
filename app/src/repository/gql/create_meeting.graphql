@@ -1,0 +1,12 @@
+mutation CreateMeeting {
+  createMeeting {
+    id
+    leaderId
+    members{
+      id
+      name
+      reaction
+    }
+    memo
+  }
+}

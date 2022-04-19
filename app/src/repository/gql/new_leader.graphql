@@ -1,0 +1,12 @@
+mutation NewLeader($id: String!) {
+  newLeader(id: $id) {
+    id
+    leaderId
+    members{
+      id
+      name
+      reaction
+    }
+    memo
+  }
+}

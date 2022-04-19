@@ -1,0 +1,12 @@
+mutation AddMember($id: String!, $name: String!) {
+  addMember(id: $id, name: $name) {
+    id
+    leaderId
+    members{
+      id
+      name
+      reaction
+    }
+    memo
+  }
+}
