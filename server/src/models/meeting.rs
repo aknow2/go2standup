@@ -1,4 +1,4 @@
-use redis::{Commands };
+use redis::{Commands, RedisError, ErrorKind };
 use rand::prelude::SliceRandom;
 use async_graphql::*;
 use futures::{lock::Mutex, Stream };
@@ -63,23 +63,49 @@ impl QueryRoot {
     }
 }
 
-async fn save_meeting(ctx: &Context<'_>, id: String, cb: impl FnOnce(Meeting) -> CreateMeetingResult) -> CreateMeetingResult {
+async fn save_meeting(ctx: &Context<'_>, id: String,mut cb: impl FnMut(Meeting) -> CreateMeetingResult) -> CreateMeetingResult {
     let storage = ctx.data_unchecked::<Storage>().lock().await;
+
     let mut conn = storage
         .get_connection()
         .or_else(|_| Err(String::from("Failed to connect storage")))?;
-    let data: String = conn
-        .get(&id)
-        .or_else(|_| Err(String::from("Invalid meeting id")))?;
-    let meeting: Meeting = serde_json::from_str(&data)
-        .or_else(|_| Err(String::from("failed to convert Meeting")))?;
-    let new_meeting = cb(meeting)?;
-    let json_str: String = serde_json::to_string(&new_meeting)
-        .or_else(|_| Err(String::from("failed to conver to json")))?;
-    let _: () = conn.set(&id, json_str.clone())
-        .or_else(|_| Err(String::from("failed to save meeting")))?;
-    conn.publish::<String, String, i32>(id, json_str.clone()).unwrap();
-    Ok(new_meeting)
+    let cloned_id = id.clone();
+    let result: Result<Meeting, RedisError> = redis::transaction(&mut conn, &[id], move |con, pipe| {
+        let id = &cloned_id;
+        let data: String = con
+            .get(&id)?;
+        let meeting: Meeting = serde_json::from_str(&data).or_else(|_| {
+                Err(
+                    RedisError::from((ErrorKind::TypeError, "Meeting object is broken"))
+                )
+            })?;
+        let new_meeting = cb(meeting).or_else(|_| {
+                Err(
+                    RedisError::from((ErrorKind::TypeError, "Failed to update meeting"))
+                )
+            })?;
+        let json_str: String = serde_json::to_string(&new_meeting)
+            .or_else(|_| {
+                Err(
+                    RedisError::from((ErrorKind::TypeError, "Failed to covert json"))
+                )
+            })?;
+        pipe.set(&id, json_str.clone()).ignore().query(con)?;
+        con.publish::<String, String, i32>(id.to_string(), json_str).unwrap();
+        Ok(Some(new_meeting))
+    });
+    match result {
+        Ok(meeting) =>  Ok(meeting),
+        Err(er) => {
+            let err_msg = match er.detail() {
+                Some(detail) => String::from(detail),
+                None => String::from("Unexpected redis error")
+            };
+            Err(err_msg)
+        }
+    }
+
+
 }
 
 pub type CreateMeetingResult = Result<Meeting, String>;
@@ -113,7 +139,7 @@ impl MutationRoot {
             let member_id = uuid::Uuid::new_v4().to_string();
             let member = Member {
                 id: ID(member_id),
-                name: name,
+                name: name.clone(),
                 reaction: ReactionType::None,
             };        
             meeting.members.push(member);
@@ -137,7 +163,13 @@ impl MutationRoot {
                 Some(i) => i,
                 None => return Err(String::from("Invalid member id"))
             };
-            let _ = std::mem::replace(&mut meeting.members[index], Member { id: member.id, name: member.name, reaction: member.reaction });
+            let _ = std::mem::replace(
+                &mut meeting.members[index],
+                Member {
+                        id: member.id.clone(),
+                        name: member.name.clone(),
+                        reaction: member.reaction
+                    });
             Ok(meeting)
         }).await
     }
@@ -196,7 +228,7 @@ impl MutationRoot {
     ) -> CreateMeetingResult {
         let save_memo = move |m: Meeting| {
             let mut meeting = m.clone();
-            meeting.memo = memo;
+            meeting.memo = memo.clone();
             Ok(meeting)
         };
         save_meeting(ctx, id, save_memo).await
@@ -207,11 +239,11 @@ impl MutationRoot {
 pub struct SubscriptionRoot;
 #[Subscription]
 impl SubscriptionRoot {
-    async fn meeting(&self, #[graphql(desc = "Id of meeting")] id: String) -> impl Stream<Item = Result<Meeting, String>> {
+    async fn meeting(&self, ctx: &Context<'_>, #[graphql(desc = "Id of meeting")] id: String) -> impl Stream<Item = Result<Meeting, String>> {
+        let storage = ctx.data_unchecked::<Storage>().lock().await;
 
+        let client = storage.clone();
         println!("start subscribe {:?}", &id);
-
-        let client = redis::Client::open("redis://redis/").expect("failed to open redis");
         async_stream::stream! {
             let mut pubsub_conn = client.get_async_connection().await.unwrap().into_pubsub();
             pubsub_conn.subscribe(&id).await.unwrap();
