@@ -1,3 +1,4 @@
+use wasm_bindgen_futures::{spawn_local, JsFuture};
 use yew::prelude::*;
 
 use crate::ctx::meeting::MeetingContext;
@@ -7,17 +8,21 @@ pub fn members_list() -> Html {
     let meeting_ctx = use_context::<MeetingContext>().expect("no ctx found");
     let id = meeting_ctx.state.id.clone();
     let origin = web_sys::window().unwrap().location().origin().unwrap();
-    let url = origin + "/?id=" + &id;
-
+    let url = match id {
+        Some(id) => origin + "/?id=" + &id,
+        None => String::from("-")
+    };
     let copy = {
         let url = url.clone();
         Callback::from(move |_| {
-            let nav = web_sys::window().unwrap().navigator();
-            let clip = nav.clipboard().unwrap();
-            clip.write_text(&url);
+            let url = url.clone();
+            spawn_local(async move {
+                let nav = web_sys::window().unwrap().navigator();
+                let clip = nav.clipboard().unwrap();
+                JsFuture::from(clip.write_text(&url)).await.unwrap();
+            })
         })
     };
-
 
     html! {
         <nav class="hero is-small is-success">
