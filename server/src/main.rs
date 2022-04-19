@@ -7,7 +7,7 @@ use axum::http::{Method};
 use axum::response::{self, IntoResponse};
 use axum::routing::{get};
 use axum::{extract::Extension, Router, Server};
-use tower_http::cors::{CorsLayer, Any, Origin};
+use tower_http::cors::{CorsLayer, Origin};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use crate::models::meeting::{MeetingSchema, MutationRoot, QueryRoot, SubscriptionRoot, Storage};
 use serde::Deserialize;

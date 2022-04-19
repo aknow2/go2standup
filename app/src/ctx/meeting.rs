@@ -1,4 +1,4 @@
-use std::{borrow::Borrow, rc::Rc};
+use std::{rc::Rc};
 
 use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
