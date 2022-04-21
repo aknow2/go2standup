@@ -3,9 +3,9 @@ use crate::data;
 
 #[derive(Properties, PartialEq)]
 pub struct MembersListProps {
-    pub members: data::meeting::Members,
+    pub member: data::meeting::Member,
     pub on_remove: Callback<data::meeting::Member>,
-    pub leader_id: Option<String>,
+    pub is_leader: bool,
 }
 
 #[function_component(MembersList)]
