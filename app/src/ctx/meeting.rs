@@ -59,11 +59,23 @@ pub struct MeetingContext {
    api: Rc<API>,
 }
 
+pub enum MeetingStatus {
+    Initializing,
+    Ready,
+}
+
 impl MeetingContext {
     fn new(state: UseStateHandle<MeetingState>, api: Rc<API>) -> MeetingContext {
         MeetingContext {
             state,
             api,
+        }
+    }
+
+    pub fn meeting_status(&self) -> MeetingStatus {
+        match self.state.id {
+            Some(_) => MeetingStatus::Ready,
+            None => MeetingStatus::Initializing,
         }
     }
 
