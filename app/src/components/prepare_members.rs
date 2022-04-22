@@ -68,8 +68,6 @@ pub fn prepare_members() -> Html {
     };
     html!{
         <div>
-            <span class="is-size-3 block">{ "Reporting order" }</span>
-
             <div class="block">
                 <MembersList leader_id={leader_id.clone()} members={members.to_vec()} on_remove={remove_member} />
             </div>

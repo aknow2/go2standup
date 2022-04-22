@@ -14,8 +14,8 @@ fn app() -> Html {
         <div>
             <Header />
             <div class="container is-max-widescreen">
-                <div class="columns  is-centered my-2">
-                    <div class="column">
+                <div class="columns is-centered my-1">
+                    <div class="column is-8">
                         <PrepareMembers/>
                     </div>
                     <div class="column">

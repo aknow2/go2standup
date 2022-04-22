@@ -12,12 +12,18 @@ pub enum ReactionType {
     None,
     Thumbup,
     Thumbdown,
+    Smile,
+    Clap,
     I,
     II,
     III,
+    IV,
     V,
+    VI,
+    VII,
     VIII,
-    XIII,
+    IX,
+    X,
 }
 
 #[derive(Clone, SimpleObject, Serialize, Deserialize)]

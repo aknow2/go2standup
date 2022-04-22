@@ -1,54 +1,69 @@
 use yew::prelude::*;
+use stylist::style;
 use crate::data;
 
 #[derive(Properties, PartialEq)]
-pub struct MembersListProps {
+pub struct MemberCardProps {
     pub member: data::meeting::Member,
     pub on_remove: Callback<data::meeting::Member>,
     pub is_leader: bool,
+    pub order: usize
 }
 
-#[function_component(MembersList)]
-pub fn members_list(MembersListProps { leader_id, members, on_remove }: &MembersListProps) -> Html {
-    members.iter().enumerate().map(|(i, member)| {
-        let on_remove_member = {
-            let on_remove = on_remove.clone();
-            let mem = member.clone();
-            Callback::from(move |_| {
-                on_remove.emit(mem.clone())
-            })
-        };
-        let leader_class = "notification is-primary block px-2 is-outlined";
-        let member_class = "notification block px-2 is-outlined";
+#[function_component(MemberCard)]
+pub fn members_card(MemberCardProps { is_leader, member, on_remove, order }: &MemberCardProps) -> Html {
+    let card_style = use_state(|| {
+        let style = style!(
+            r#"
+               width: 190px;
+            "#
+         ).expect("Failed to mount style");
+         style.get_class_name().to_string()
+    });
+    let on_remove_member = {
+        let on_remove = on_remove.clone();
+        let mem = member.clone();
+        Callback::from(move |_| {
+            on_remove.emit(mem.clone())
+        })
+    };
 
-        let is_leader = match leader_id {
-            Some(id) => *id == member.id,
-            None => false,
-        };
-        let class_name = if is_leader { leader_class } else { member_class };
+    let header_content = match is_leader {
+        true => html! {
+            <span class="icon has-text-success">
+                <i class="material-icons">{"flag"}</i>
+            </span> },
+        false => html! {<span class="is-size-5 pl-1">{ order }</span>},
+    };
 
-        let prepend_content = match is_leader {
-            true => html! {
-                <span class="icon">
-                    <i class="material-icons">{"flag"}</i>
-                </span> },
-            false => html! {<span class="is-size-5 pl-1">{ i+1 }</span>},
-        };
-
-        html!{
-            <div class={class_name}>
-               <div class="columns is-vcentered">
-                    <div class="column">
-                        { prepend_content }
+    html!{
+        <div class={"card ".to_string() + &card_style.to_string()}>
+            <div class="level mb-0">
+                <div class="level-left">
+                    <div class="level-item ml-2">
+                        {header_content}       
                     </div>
-                    <div class="column is-four-fifths is-size-5">
-                        {member.name.to_string()}
-                    </div>
-                    <div class="column">
-                        <button class="delete" onclick={on_remove_member}></button>
+                </div>
+                <div class="level-right">
+                    <div class="level-item">
+                        <button class="card-header-icon" onclick={on_remove_member}>
+                            <span class="icon">
+                                <i class="material-icons">{"clear"}</i>
+                            </span>
+                        </button>
                     </div>
                 </div>
             </div>
-        }
-    }).collect::<Html>()
+            <div class="block is-flex is-justify-content-center mb-0">
+                <span class="is-size-1">
+                    {"\u{1F378}"}
+                </span>
+            </div>
+            <footer class="card-footer">
+                <div class="card-footer-item">
+                    {&member.name}
+                </div>
+            </footer>
+        </div>
+    }
 }
