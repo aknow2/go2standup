@@ -22,10 +22,10 @@ pub fn members_list() -> Html {
 
   html! {
     <div>
-      <div class="is-size-3">{ "Parking lot" }</div>
       <div>
         <textarea
             class="textarea"
+            placeholder="Rarking lot"
             rows="10"
             value={memo.to_string()}
             onchange={change_memo}

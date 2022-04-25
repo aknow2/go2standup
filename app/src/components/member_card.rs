@@ -1,6 +1,5 @@
 use yew::prelude::*;
-use stylist::style;
-use crate::data;
+use crate::{data, ctx::styles::StyleContext};
 
 #[derive(Properties, PartialEq)]
 pub struct MemberCardProps {
@@ -12,14 +11,8 @@ pub struct MemberCardProps {
 
 #[function_component(MemberCard)]
 pub fn members_card(MemberCardProps { is_leader, member, on_remove, order }: &MemberCardProps) -> Html {
-    let card_style = use_state(|| {
-        let style = style!(
-            r#"
-               width: 190px;
-            "#
-         ).expect("Failed to mount style");
-         style.get_class_name().to_string()
-    });
+    let style_ctx = use_context::<StyleContext>().expect("no ctx found");
+    
     let on_remove_member = {
         let on_remove = on_remove.clone();
         let mem = member.clone();
@@ -37,7 +30,7 @@ pub fn members_card(MemberCardProps { is_leader, member, on_remove, order }: &Me
     };
 
     html!{
-        <div class={"card ".to_string() + &card_style.to_string()}>
+        <div class={style_ctx.card.to_string()}>
             <div class="level mb-0">
                 <div class="level-left">
                     <div class="level-item ml-2">

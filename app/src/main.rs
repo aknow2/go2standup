@@ -7,6 +7,7 @@ use components::prepare_members:: { PrepareMembers };
 use components::parking_lot:: { ParkingLot };
 use components::header:: { Header };
 use ctx::meeting::{MeetingProvider};
+use ctx::styles::{StyleProvider};
 
 #[function_component(App)]
 fn app() -> Html {
@@ -30,9 +31,11 @@ fn app() -> Html {
 #[function_component(Root)]
 fn root() -> Html {
     html! {
-        <MeetingProvider>
-            <App></App>
-        </MeetingProvider>
+        <StyleProvider>
+            <MeetingProvider>
+                <App></App>
+            </MeetingProvider>
+        </StyleProvider>
     }
 }
 

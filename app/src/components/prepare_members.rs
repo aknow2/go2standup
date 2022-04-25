@@ -2,12 +2,14 @@ use yew::prelude::*;
 use web_sys::{HtmlInputElement};
 use wasm_bindgen::*;
 use crate::ctx::meeting::{MeetingActions, MeetingContext};
+use crate::ctx::styles::StyleContext;
 use crate::data;
 use crate::components::member_list::MembersList;
 
 #[function_component(PrepareMembers)]
 pub fn prepare_members() -> Html {
     let meeting_ctx = use_context::<MeetingContext>().expect("no ctx found");
+    let style_ctx = use_context::<StyleContext>().expect("no ctx found");
     log::info!("{:?}", meeting_ctx.state);
 
     let state = meeting_ctx.state.clone();
@@ -68,10 +70,10 @@ pub fn prepare_members() -> Html {
     };
     html!{
         <div>
-            <div class="block">
+            <div class={style_ctx.member_list.to_string()}>
                 <MembersList leader_id={leader_id.clone()} members={members.to_vec()} on_remove={remove_member} />
             </div>
-            <div class="columns is-vcentered">
+            <div class="columns is-vcentered mt-2">
                 <div class="column is-four-fifths">
                     <input
                         class="input is-large"
