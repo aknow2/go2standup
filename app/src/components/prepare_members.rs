@@ -1,3 +1,4 @@
+use stylist::{ style };
 use yew::prelude::*;
 use web_sys::{HtmlInputElement};
 use wasm_bindgen::*;
@@ -16,6 +17,7 @@ pub fn prepare_members() -> Html {
     let members = state.members.to_vec();
     let new_member_name: UseStateHandle<String>= use_state(|| String::from(""));
     let leader_id = state.leader_id.clone();
+
 
     let add_member = {
         let new_member_name = new_member_name.clone();
@@ -68,33 +70,82 @@ pub fn prepare_members() -> Html {
             new_member_name.set(val);
         })
     };
+
+    let input = use_state(|| {
+        let style = style!(
+            r#"
+                width: 95%;
+                border: 0px;
+                outline: none;
+                padding: 0px;
+                height: 100%;
+                *:focus {
+                    border: 0px;
+                    outline: none;
+                }
+            "#
+        ).expect("Failed to create style");
+
+        style.get_class_name().to_string()
+    });
+    let text_container = use_state(|| {
+        let style = style!(
+            r#"
+                padding: 0 4px;
+                margin: 0px;
+                width: 100%;
+                border: 1px solid #333333;
+                border-radius: 4px;
+                display: flex;
+                align-items: center;
+            "#
+        ).expect("Failed to create style");
+        style.get_class_name().to_string()
+    });
+    let flat_button = use_state(|| {
+        let style = style!(
+            r#"
+                padding: 0px;
+                border: 0px;
+                background: none;
+                border-radius: 50%;
+                outline: none;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                *:active {
+                    background-color: rgba(230, 230, 230, 0.5);
+                    border-radius: 50%;
+                    border: 0px;
+                    outline: none;
+                }
+            "#
+        ).expect("Failed to create style");
+        style.get_class_name().to_string()
+    });
     html!{
         <div>
-            <div class={style_ctx.member_list.to_string()}>
-                <MembersList leader_id={leader_id.clone()} members={members.to_vec()} on_remove={remove_member} />
-            </div>
-            <div class="columns is-vcentered mt-2">
-                <div class="column is-four-fifths">
-                    <input
-                        class="input is-large"
-                        type="text"
-                        placeholder="name"
-                        value={new_member_name.to_string()}
-                        onkeydown={keydown}
-                        oninput={change_new_member_name}
-                    />
-                </div>
-                <div class="column is-half">
-                    <div class="button is-white" onclick={add_member}>
-                        <span class="icon is-large">
-                            <i class="material-icons">{"add"}</i>
-                        </span>
-                    </div>
-                </div>
+            <div class={text_container.to_string()}>
+                <input
+                    class={input.to_string()}
+                    type="text"
+                    placeholder="name"
+                    value={new_member_name.to_string()}
+                    onkeydown={keydown}
+                    oninput={change_new_member_name}
+                />
+                <button class={flat_button.to_string()}>
+                    <span class="icon" onclick={add_member}>
+                        <i class="material-icons">{"add"}</i>
+                    </span>
+                </button>
             </div>
             <div class="block buttons">
                 <button onclick={new_leader} class="button is-primary is-light">{ "Today's Leader" }</button>
                 <button onclick={shuffle_members} class="button is-link is-light">{ "Shuffle order" }</button>
+            </div>
+            <div class={style_ctx.member_list.to_string()}>
+                <MembersList leader_id={leader_id.clone()} members={members.to_vec()} on_remove={remove_member} />
             </div>
         </div>
     }
