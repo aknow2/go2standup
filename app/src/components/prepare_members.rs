@@ -74,6 +74,7 @@ pub fn prepare_members() -> Html {
     let input = use_state(|| {
         let style = style!(
             r#"
+                background-color: #f2f2f2;
                 width: 95%;
                 border: 0px;
                 outline: none;
@@ -91,6 +92,7 @@ pub fn prepare_members() -> Html {
     let text_container = use_state(|| {
         let style = style!(
             r#"
+                background-color: #f2f2f2;
                 padding: 0 4px;
                 margin: 0px;
                 width: 100%;
@@ -123,26 +125,63 @@ pub fn prepare_members() -> Html {
         ).expect("Failed to create style");
         style.get_class_name().to_string()
     });
+    let outline_button = use_state(|| {
+        let style = style!(
+            r#"
+                padding: 4px;
+                border: 3px solid #9CCED9;
+                color: #9CCED9;
+                border-radius: 5px;
+                background: none;
+                outline: none;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            "#
+        ).expect("Failed to create style");
+        style.get_class_name().to_string()
+    });
+    let container = use_state(|| {
+        let style = style!(
+            r#"
+                display: flex;
+                justify-content: space-between;
+            "#
+        ).expect("Failed to create style");
+        style.get_class_name().to_string()
+    });
+    let percent60 = use_state(|| {
+        let style = style!(
+            r#"
+                width: 60%;
+            "#
+        ).expect("Failed to create style");
+        style.get_class_name().to_string()
+    });
     html!{
         <div>
-            <div class={text_container.to_string()}>
-                <input
-                    class={input.to_string()}
-                    type="text"
-                    placeholder="name"
-                    value={new_member_name.to_string()}
-                    onkeydown={keydown}
-                    oninput={change_new_member_name}
-                />
-                <button class={flat_button.to_string()}>
-                    <span class="icon" onclick={add_member}>
-                        <i class="material-icons">{"add"}</i>
-                    </span>
-                </button>
-            </div>
-            <div class="block buttons">
-                <button onclick={new_leader} class="button is-primary is-light">{ "Today's Leader" }</button>
-                <button onclick={shuffle_members} class="button is-link is-light">{ "Shuffle order" }</button>
+            <div  class={container.to_string()}>
+                <div class={percent60.to_string()}>
+                    <div class={text_container.to_string()}>
+                        <input
+                            class={input.to_string()}
+                            type="text"
+                            placeholder="name"
+                            value={new_member_name.to_string()}
+                            onkeydown={keydown}
+                            oninput={change_new_member_name}
+                        />
+                        <button class={flat_button.to_string()}>
+                            <span class="icon" onclick={add_member}>
+                                <i class="material-icons">{"add"}</i>
+                            </span>
+                        </button>
+                    </div>
+                </div>
+                <div class="block buttons">
+                    <button onclick={new_leader} class={outline_button.to_string()}>{ "Leader" }</button>
+                    <button onclick={shuffle_members} class="button is-link is-light">{ "Shuffle" }</button>
+                </div>
             </div>
             <div class={style_ctx.member_list.to_string()}>
                 <MembersList leader_id={leader_id.clone()} members={members.to_vec()} on_remove={remove_member} />

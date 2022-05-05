@@ -4,7 +4,7 @@ use stylist::{ style };
 #[derive(Debug, PartialEq, Clone)]
 pub struct StyleContext {
     pub header: String,
-    pub card: String,
+    pub member_card: String,
     pub member_list: String,
 }
 
@@ -23,14 +23,15 @@ pub struct StyleProviderProps {
 pub fn styleProvider_provider(props: &StyleProviderProps) -> Html {
     let state = use_state(|| {
         // Card
-        let card_style = style!(
+        let member_card_style = style!(
             r#"
                width: 190px;
-               border: thin solid #cccccc;
+               border: thin solid #000000;
+               background-color: #323850;
                border-radius: 4px;
             "#
          ).expect("Failed to mount style");
-        let card = card_style.get_class_name().to_string();
+        let member_card = member_card_style.get_class_name().to_string();
 
          // Member list
         let member_list_style = style!(
@@ -52,16 +53,14 @@ pub fn styleProvider_provider(props: &StyleProviderProps) -> Html {
                align-items: center;
                height: 48px;
                padding: 16px;
-               border-bottom: thin solid #333333;
+               margin-bottom: 16px;
             "#
          ).expect("Failed to mount style");
         let header = header_style.get_class_name().to_string();
 
-
-
         StyleProviderState {
             ctx: StyleContext {
-                card,
+                member_card,
                 member_list,
                 header,
             },

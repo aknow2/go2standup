@@ -30,7 +30,7 @@ pub fn members_card(MemberCardProps { is_leader, member, on_remove, order }: &Me
     };
 
     html!{
-        <div class={style_ctx.card.to_string()}>
+        <div class={style_ctx.member_card.to_string()}>
             <div class="level mb-0">
                 <div class="level-left">
                     <div class="level-item ml-2">
