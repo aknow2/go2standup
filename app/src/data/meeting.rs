@@ -1,8 +1,11 @@
+use std::slice::Iter;
+use self::ReactionType::*;
+
 use serde:: { Serialize, Deserialize };
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub enum ReactionType {
-    None,
+    NONE,
     Thumbup,
     Thumbdown,
     Smile,
@@ -17,6 +20,29 @@ pub enum ReactionType {
     VIII,
     IX,
     X,
+}
+
+impl ReactionType {
+    pub fn itr() -> Iter<'static, ReactionType> {
+        static REACTIONS: [ReactionType; 15] = [
+            NONE,
+            Thumbup,
+            Thumbdown,
+            Smile,
+            Clap,
+            I,
+            II,
+            III,
+            IV,
+            V,
+            VI,
+            VII,
+            VIII,
+            IX,
+            X,
+        ];
+        REACTIONS.iter()
+    }
 }
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]

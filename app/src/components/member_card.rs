@@ -19,7 +19,7 @@ pub struct FrontProps {
     pub order: usize
 }
 
-fn emoji(reactionType: ReactionType) -> &'static str {
+fn emoji(reactionType: &ReactionType) -> &'static str {
     match reactionType {
         ReactionType::Thumbup => "\u{1F44D}",
         ReactionType::Thumbdown => "\u{1F44E}",
@@ -88,6 +88,7 @@ pub fn front(FrontProps { is_leader, member, on_remove, order, on_flip }: &Front
         ).expect("failed to convert css");
         s.get_class_name().to_string()
     });
+    let emoji = emoji(&member.reaction);
     html!{
         <div>
             <div class={&*card_header}>
@@ -105,12 +106,59 @@ pub fn front(FrontProps { is_leader, member, on_remove, order, on_flip }: &Front
             <div>
                 <button class={style_ctx.flat_btn.to_string()} onclick={flip_to_back}>
                     <Typography size={TextSize::H1}>
-                    {"\u{1F378}"}
+                    {emoji}
                     </Typography>
                 </button>
             </div>
             <div class={&*card_footer}>
                 {&member.name}
+            </div>
+        </div>
+    }
+}
+
+#[derive(Properties, PartialEq)]
+pub struct BackProps {
+    pub on_flip: Callback<Flip>,
+}
+
+#[function_component(Back)]
+pub fn back(BackProps { on_flip }: &BackProps) -> Html {
+    let style_ctx = use_context::<StyleContext>().expect("no ctx found");
+
+    let flip_to_front = {
+        let on_flip = on_flip.clone();
+        Callback::from(move |_| {
+            on_flip.emit(Flip::Front)
+        })
+    };
+
+    let emojis: Vec<Html> = ReactionType::itr().map(|reaction| {
+        html!(
+            <button class={style_ctx.icon_btn.to_string()}>{emoji(reaction)}</button>
+        )
+    }).collect();
+
+    let card_header = use_state(|| {
+        let s = style!(
+            r#"
+                padding: 4px;
+                width: 100%;
+                display: flex;
+                align-items: center;
+            "#
+        ).expect("failed to convert css");
+        s.get_class_name().to_string()
+    });
+    html!{
+        <div>
+            <div class={&*card_header}>
+                <button class={style_ctx.icon_btn.to_string()} onclick={flip_to_front}>
+                    <i class="material-icons">{"arrow_back"}</i>
+                </button>
+            </div>
+            <div>
+                { emojis }
             </div>
         </div>
     }
@@ -137,13 +185,21 @@ pub fn members_card(MemberCardProps { is_leader, member, on_remove, order }: &Me
     };
     html!{
         <div class={style_ctx.member_card.to_string()}>
-            <Front 
-                is_leader={is_leader.clone()}
-                on_remove={on_remove}
-                on_flip={on_flip}
-                member={member.clone()}
-                order={order.clone()}
-            />
+            {
+                match &*flip {
+                    Flip::Front => html!{<Front 
+                        is_leader={is_leader.clone()}
+                        on_remove={on_remove}
+                        on_flip={on_flip}
+                        member={member.clone()}
+                        order={order.clone()}
+                    />},
+                    Flip::Back => html!{<Back
+                            on_flip={on_flip}
+                        />},
+                }
+            }
+            
         </div>
     }
 }

@@ -166,7 +166,11 @@ impl API {
         let query = serde_json::json!(build_query);
         let json = post(query, &self.url()).await;
         let response: GQLResponse<UpdateMemoHolder> = json.into_serde().unwrap();
-        parse_response(response, |d| d.update_memo)
+        parse_response(
+            response, |
+            d|
+            d.update_memo
+        )
     }
     pub async fn fetch_meeting(&self, id: String) -> MeetingResult {
         let variables = fetch_meeting::Variables {
@@ -196,7 +200,7 @@ impl API {
             ReactionType::Thumbdown => update_member::ReactionType::Thumbdown,
             ReactionType::Smile => update_member::ReactionType::Smile,
             ReactionType::Clap => update_member::ReactionType::Clap,
-            ReactionType::None => update_member::ReactionType::None,
+            _ => update_member::ReactionType::None,
         };
 
         let variables = update_member::Variables {
