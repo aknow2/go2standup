@@ -196,11 +196,11 @@ impl API {
             ReactionType::VIII => update_member::ReactionType::VIII,
             ReactionType::IX => update_member::ReactionType::IX,
             ReactionType::X => update_member::ReactionType::X,
-            ReactionType::Thumbup => update_member::ReactionType::Thumbup,
-            ReactionType::Thumbdown => update_member::ReactionType::Thumbdown,
-            ReactionType::Smile => update_member::ReactionType::Smile,
-            ReactionType::Clap => update_member::ReactionType::Clap,
-            _ => update_member::ReactionType::None,
+            ReactionType::THUMBSUP => update_member::ReactionType::THUMBSUP,
+            ReactionType::THUMBSDOWN => update_member::ReactionType::THUMBSDOWN,
+            ReactionType::SMILE => update_member::ReactionType::SMILE,
+            ReactionType::CLAP => update_member::ReactionType::CLAP,
+            _ => update_member::ReactionType::NONE,
         };
 
         let variables = update_member::Variables {

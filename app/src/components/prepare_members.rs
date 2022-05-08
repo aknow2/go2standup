@@ -35,6 +35,13 @@ pub fn prepare_members() -> Html {
         })
     };
 
+    let update_member = {
+        let ctx = meeting_ctx.clone();
+        Callback::from(move |member: data::meeting::Member| {
+            ctx.dispatch(MeetingActions::UpdateMember(member));
+        })
+    };
+
     let shuffle_members = {
         let ctx = meeting_ctx.clone();
         Callback::from(move |_| {
@@ -158,7 +165,12 @@ pub fn prepare_members() -> Html {
                 </div>
             </div>
             <div class={style_ctx.member_list.to_string()}>
-                <MembersList leader_id={leader_id.clone()} members={members.to_vec()} on_remove={remove_member} />
+                <MembersList
+                    leader_id={leader_id.clone()}
+                    members={members.to_vec()}
+                    on_remove={remove_member}
+                    on_update_member={update_member}
+                />
             </div>
         </div>
     }

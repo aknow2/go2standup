@@ -29,6 +29,7 @@ pub fn style_provider(props: &StyleProviderProps) -> Html {
         let member_card_style = style!(
             r#"
                width: 190px;
+               height: 158px;
                background-color: #34425C;
                border-radius: 4px;
             "#

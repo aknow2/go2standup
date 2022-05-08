@@ -33,13 +33,8 @@ pub fn members_list() -> Html {
                 </p>
             </div>
             <div>
-                <a class="button is-info" onclick={copy}>
-                    <span class="icon is-small">
-                        <i class="material-icons" >{"link"}</i>
-                    </span>
-                    <span>
-                        {"Share"}
-                    </span>
+                <a class={style_ctx.outline_btn.clone()} onclick={copy}>
+                    {"Share"}
                 </a>
             </div>
         </nav>

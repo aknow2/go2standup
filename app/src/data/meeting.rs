@@ -6,10 +6,10 @@ use serde:: { Serialize, Deserialize };
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub enum ReactionType {
     NONE,
-    Thumbup,
-    Thumbdown,
-    Smile,
-    Clap,
+    THUMBSUP,
+    THUMBSDOWN,
+    SMILE,
+    CLAP,
     I,
     II,
     III,
@@ -26,10 +26,10 @@ impl ReactionType {
     pub fn itr() -> Iter<'static, ReactionType> {
         static REACTIONS: [ReactionType; 15] = [
             NONE,
-            Thumbup,
-            Thumbdown,
-            Smile,
-            Clap,
+            THUMBSUP,
+            THUMBSDOWN,
+            SMILE,
+            CLAP,
             I,
             II,
             III,
