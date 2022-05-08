@@ -74,7 +74,7 @@ pub fn prepare_members() -> Html {
     let input = use_state(|| {
         let style = style!(
             r#"
-                background-color: #f2f2f2;
+                background-color: #1D3249;
                 width: 95%;
                 border: 0px;
                 outline: none;
@@ -92,50 +92,14 @@ pub fn prepare_members() -> Html {
     let text_container = use_state(|| {
         let style = style!(
             r#"
-                background-color: #f2f2f2;
+                background-color: #1D3249;
                 padding: 0 4px;
                 margin: 0px;
                 width: 100%;
-                border: 1px solid #333333;
+                height: 100%;
+                border: 1px solid #aaa;
                 border-radius: 4px;
                 display: flex;
-                align-items: center;
-            "#
-        ).expect("Failed to create style");
-        style.get_class_name().to_string()
-    });
-    let flat_button = use_state(|| {
-        let style = style!(
-            r#"
-                padding: 0px;
-                border: 0px;
-                background: none;
-                border-radius: 50%;
-                outline: none;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                *:active {
-                    background-color: rgba(230, 230, 230, 0.5);
-                    border-radius: 50%;
-                    border: 0px;
-                    outline: none;
-                }
-            "#
-        ).expect("Failed to create style");
-        style.get_class_name().to_string()
-    });
-    let outline_button = use_state(|| {
-        let style = style!(
-            r#"
-                padding: 4px;
-                border: 3px solid #9CCED9;
-                color: #9CCED9;
-                border-radius: 5px;
-                background: none;
-                outline: none;
-                display: flex;
-                justify-content: center;
                 align-items: center;
             "#
         ).expect("Failed to create style");
@@ -145,12 +109,22 @@ pub fn prepare_members() -> Html {
         let style = style!(
             r#"
                 display: flex;
-                justify-content: space-between;
+                margin-bottom: 16px;
             "#
         ).expect("Failed to create style");
         style.get_class_name().to_string()
     });
-    let percent60 = use_state(|| {
+    let button_group = use_state(|| {
+        let style = style!(
+            r#"
+                padding: 0 8px;
+                display: flex;
+                gap: 0 16px;
+            "#
+        ).expect("Failed to create style");
+        style.get_class_name().to_string()
+    });
+    let percent60w = use_state(|| {
         let style = style!(
             r#"
                 width: 60%;
@@ -160,8 +134,8 @@ pub fn prepare_members() -> Html {
     });
     html!{
         <div>
-            <div  class={container.to_string()}>
-                <div class={percent60.to_string()}>
+            <div class={container.to_string()}>
+                <div class={percent60w.to_string()}>
                     <div class={text_container.to_string()}>
                         <input
                             class={input.to_string()}
@@ -171,16 +145,16 @@ pub fn prepare_members() -> Html {
                             onkeydown={keydown}
                             oninput={change_new_member_name}
                         />
-                        <button class={flat_button.to_string()}>
+                        <button class={style_ctx.icon_btn.to_string()}>
                             <span class="icon" onclick={add_member}>
                                 <i class="material-icons">{"add"}</i>
                             </span>
                         </button>
                     </div>
                 </div>
-                <div class="block buttons">
-                    <button onclick={new_leader} class={outline_button.to_string()}>{ "Leader" }</button>
-                    <button onclick={shuffle_members} class="button is-link is-light">{ "Shuffle" }</button>
+                <div class={button_group.to_string()}>
+                    <button onclick={new_leader} class={style_ctx.outline_btn.to_string()}>{ "Today's Leader" }</button>
+                    <button onclick={shuffle_members} class={style_ctx.outline_btn.to_string()}>{ "Shuffle" }</button>
                 </div>
             </div>
             <div class={style_ctx.member_list.to_string()}>

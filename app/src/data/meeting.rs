@@ -2,15 +2,21 @@ use serde:: { Serialize, Deserialize };
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub enum ReactionType {
-    NONE,
+    None,
     Thumbup,
     Thumbdown,
+    Smile,
+    Clap,
     I,
     II,
     III,
+    IV,
     V,
+    VI,
+    VII,
     VIII,
-    XIII,
+    IX,
+    X,
 }
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]

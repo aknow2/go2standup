@@ -1,3 +1,4 @@
+use stylist::style;
 use yew::prelude::*;
 use wasm_bindgen::*;
 use web_sys::{HtmlInputElement};
@@ -17,10 +18,23 @@ pub fn members_list() -> Html {
       ctx.dispatch(MeetingActions::UpdateMemo(val));
     })
   };
+  let textarea = use_state(|| {
+        let style = style!(
+            r#"
+                width: 100%;
+                height: 100%;
+                padding: 4px;
+                border: 3px solid #03A688;
+                background-color: #1D3249;
+                border: 1px solid #aaa;
+            "#
+        ).expect("Failed to create style");
+        style.get_class_name().to_string()
+    });
 
   html! {
     <textarea
-      class="textarea"
+      class={textarea.to_string()}
       placeholder="Rarking lot"
       rows="10"
       value={memo.to_string()}
