@@ -30,8 +30,10 @@ pub fn style_provider(props: &StyleProviderProps) -> Html {
             r#"
                width: 190px;
                height: 158px;
-               background-color: #34425C;
-               border-radius: 4px;
+               border-radius: 5px;
+               background: #272D44;
+               box-shadow:  1px 1px 2px #171b28,
+                            -1px -1px 2px #373f60;
             "#
          ).expect("Failed to mount style");
         let member_card = member_card_style.get_class_name().to_string();
@@ -40,7 +42,7 @@ pub fn style_provider(props: &StyleProviderProps) -> Html {
         let member_list_style = style!(
             r#"
                display: flex;
-               gap: 16px;
+               gap: 24px;
                flex-wrap: wrap;
             "#
          ).expect("Failed to mount style");
@@ -103,7 +105,7 @@ pub fn style_provider(props: &StyleProviderProps) -> Html {
         let outline_btn_style = style!(
             r#"
                 padding: 4px;
-                border: 3px solid #03A688;
+                border: 1px solid #03A688;
                 color: #03A688;
                 border-radius: 5px;
                 background: none;
@@ -112,8 +114,16 @@ pub fn style_provider(props: &StyleProviderProps) -> Html {
                 justify-content: center;
                 align-items: center;
                 &:active {
-                    border: 3px solid #038C7F;
+                    border: 1px solid #038C7F;
                     color: #038C7F;
+                }
+                &.info {
+                    border: 1px solid #9BDAF2;
+                    color: #9BDAF2;
+                }
+                &.secondary {
+                    border: 1px solid #818274;
+                    color: #818274;
                 }
             "#
         ).expect("Failed to create style");

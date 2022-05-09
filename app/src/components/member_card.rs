@@ -25,6 +25,7 @@ fn emoji(reactionType: &ReactionType) -> &'static str {
         ReactionType::THUMBSDOWN => "\u{1F44E}",
         ReactionType::CLAP => "\u{1F44F}",
         ReactionType::SMILE => "\u{1F642}",
+        ReactionType::ZERO => "\u{0030}\u{fe0f}\u{20e3}",
         ReactionType::I => "\u{0031}\u{fe0f}\u{20e3}",
         ReactionType::II => "\u{0032}\u{fe0f}\u{20e3}",
         ReactionType::III => "\u{0033}\u{fe0f}\u{20e3}",
@@ -35,7 +36,7 @@ fn emoji(reactionType: &ReactionType) -> &'static str {
         ReactionType::VIII => "\u{0038}\u{fe0f}\u{20e3}",
         ReactionType::IX => "\u{0039}\u{fe0f}\u{20e3}",
         ReactionType::X => "\u{1F51F}",
-        _ => "\u{1F610}"
+        ReactionType::NONE => "\u{1F610}"
     }
 }
 

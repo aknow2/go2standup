@@ -10,6 +10,7 @@ pub enum ReactionType {
     THUMBSDOWN,
     SMILE,
     CLAP,
+    ZERO,
     I,
     II,
     III,
@@ -24,12 +25,13 @@ pub enum ReactionType {
 
 impl ReactionType {
     pub fn itr() -> Iter<'static, ReactionType> {
-        static REACTIONS: [ReactionType; 15] = [
+        static REACTIONS: [ReactionType; 16] = [
             NONE,
             THUMBSUP,
             THUMBSDOWN,
             SMILE,
             CLAP,
+            ZERO,
             I,
             II,
             III,

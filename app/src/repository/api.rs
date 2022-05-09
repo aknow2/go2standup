@@ -186,6 +186,7 @@ impl API {
 
     pub async fn update_member(&self, id: String, member: Member) -> MeetingResult {
         let reaction = match member.reaction {
+            ReactionType::ZERO => update_member::ReactionType::ZERO,
             ReactionType::I => update_member::ReactionType::I,
             ReactionType::II => update_member::ReactionType::II,
             ReactionType::III => update_member::ReactionType::III,
@@ -200,7 +201,7 @@ impl API {
             ReactionType::THUMBSDOWN => update_member::ReactionType::THUMBSDOWN,
             ReactionType::SMILE => update_member::ReactionType::SMILE,
             ReactionType::CLAP => update_member::ReactionType::CLAP,
-            _ => update_member::ReactionType::NONE,
+            ReactionType::NONE => update_member::ReactionType::NONE,
         };
 
         let variables = update_member::Variables {

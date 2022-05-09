@@ -117,6 +117,12 @@ pub fn prepare_members() -> Html {
             r#"
                 display: flex;
                 margin-bottom: 16px;
+                margin-right: 32px;
+                padding: 8px 16px;
+                border-radius: 19px;
+                background: linear-gradient(145deg, #2a3049, #23293d);
+                box-shadow:  8px 8px 16px #171b28,
+                             -8px -8px 16px #373f60;
             "#
         ).expect("Failed to create style");
         style.get_class_name().to_string()
@@ -147,7 +153,7 @@ pub fn prepare_members() -> Html {
                         <input
                             class={input.to_string()}
                             type="text"
-                            placeholder="name"
+                            placeholder="Add member"
                             value={new_member_name.to_string()}
                             onkeydown={keydown}
                             oninput={change_new_member_name}
@@ -160,8 +166,18 @@ pub fn prepare_members() -> Html {
                     </div>
                 </div>
                 <div class={button_group.to_string()}>
-                    <button onclick={new_leader} class={style_ctx.outline_btn.to_string()}>{ "Today's Leader" }</button>
-                    <button onclick={shuffle_members} class={style_ctx.outline_btn.to_string()}>{ "Shuffle" }</button>
+                    <button
+                        onclick={new_leader}
+                        class={style_ctx.outline_btn.to_string()}
+                    >
+                        { "Today's Leader" }
+                    </button>
+                    <button
+                        onclick={shuffle_members}
+                        class={style_ctx.outline_btn.to_string() + " secondary"}
+                    >
+                        { "Shuffle" }
+                    </button>
                 </div>
             </div>
             <div class={style_ctx.member_list.to_string()}>

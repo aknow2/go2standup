@@ -21,12 +21,18 @@ pub fn members_list() -> Html {
   let textarea = use_state(|| {
         let style = style!(
             r#"
+                font-size: 18px;
                 width: 100%;
                 height: 100%;
-                padding: 4px;
-                border: 3px solid #03A688;
-                background-color: #1D3249;
-                border: 1px solid #aaa;
+                border: none;
+                padding: 8px;
+                border-radius: 10px 0px 0px 10px;
+                background: #272D44;
+                box-shadow: inset 5px 5px 10px #171b28,
+                            inset -5px -5px 10px #373f60;
+                &:focus {
+                  outline: none;
+                }
             "#
         ).expect("Failed to create style");
         style.get_class_name().to_string()
