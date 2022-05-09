@@ -5,6 +5,7 @@ use yew::prelude::*;
 use crate::{data::meeting:: { Member, ErrorMsg }, repository::{storage::{get_meeting_id, set_meeting_id}, api::{MeetingResult, API}}};
 pub enum MeetingActions {
     StartMeeting(Option<String>),
+    UpdateMember(Member),
     UpdateMemo(String),
     AddMember(String),
     RemoveMember(String),
@@ -160,6 +161,13 @@ impl MeetingContext {
                     if let Some(id) = &state.id {
                         log::info!("New leader");
                         let result = my.api.new_leader(id.clone()).await;
+                        my.received_meeting_result(result);
+                    }
+                },
+                MeetingActions::UpdateMember(member) => {
+                    if let Some(id) = &state.id {
+                        log::info!("New leader");
+                        let result = my.api.update_member(id.clone(), member).await;
                         my.received_meeting_result(result);
                     }
                 },

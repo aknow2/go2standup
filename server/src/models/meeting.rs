@@ -9,15 +9,22 @@ use serde:: { Serialize, Deserialize };
 pub type MeetingSchema = Schema<QueryRoot, MutationRoot, SubscriptionRoot>;
 #[derive(Enum, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub enum ReactionType {
-    None,
-    Thumbup,
-    Thumbdown,
+    NONE,
+    THUMBSUP,
+    THUMBSDOWN,
+    SMILE,
+    CLAP,
+    ZERO,
     I,
     II,
     III,
+    IV,
     V,
+    VI,
+    VII,
     VIII,
-    XIII,
+    IX,
+    X,
 }
 
 #[derive(Clone, SimpleObject, Serialize, Deserialize)]
@@ -140,7 +147,7 @@ impl MutationRoot {
             let member = Member {
                 id: ID(member_id),
                 name: name.clone(),
-                reaction: ReactionType::None,
+                reaction: ReactionType::NONE,
             };        
             meeting.members.push(member);
             Ok(meeting)

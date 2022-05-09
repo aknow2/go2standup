@@ -1,19 +1,23 @@
+use stylist::{ style };
 use yew::prelude::*;
 use web_sys::{HtmlInputElement};
 use wasm_bindgen::*;
 use crate::ctx::meeting::{MeetingActions, MeetingContext};
+use crate::ctx::styles::StyleContext;
 use crate::data;
 use crate::components::member_list::MembersList;
 
 #[function_component(PrepareMembers)]
 pub fn prepare_members() -> Html {
     let meeting_ctx = use_context::<MeetingContext>().expect("no ctx found");
+    let style_ctx = use_context::<StyleContext>().expect("no ctx found");
     log::info!("{:?}", meeting_ctx.state);
 
     let state = meeting_ctx.state.clone();
     let members = state.members.to_vec();
     let new_member_name: UseStateHandle<String>= use_state(|| String::from(""));
     let leader_id = state.leader_id.clone();
+
 
     let add_member = {
         let new_member_name = new_member_name.clone();
@@ -28,6 +32,13 @@ pub fn prepare_members() -> Html {
         let ctx = meeting_ctx.clone();
         Callback::from(move |member: data::meeting::Member| {
             ctx.dispatch(MeetingActions::RemoveMember(member.id.to_string()));
+        })
+    };
+
+    let update_member = {
+        let ctx = meeting_ctx.clone();
+        Callback::from(move |member: data::meeting::Member| {
+            ctx.dispatch(MeetingActions::UpdateMember(member));
         })
     };
 
@@ -66,35 +77,116 @@ pub fn prepare_members() -> Html {
             new_member_name.set(val);
         })
     };
+
+    let input = use_state(|| {
+        let style = style!(
+            r#"
+                background-color: #1D3249;
+                width: 95%;
+                border: 0px;
+                outline: none;
+                padding: 0px;
+                height: 100%;
+                *:focus {
+                    border: 0px;
+                    outline: none;
+                }
+            "#
+        ).expect("Failed to create style");
+
+        style.get_class_name().to_string()
+    });
+    let text_container = use_state(|| {
+        let style = style!(
+            r#"
+                background-color: #1D3249;
+                padding: 0 4px;
+                margin: 0px;
+                width: 100%;
+                height: 100%;
+                border: 1px solid #aaa;
+                border-radius: 4px;
+                display: flex;
+                align-items: center;
+            "#
+        ).expect("Failed to create style");
+        style.get_class_name().to_string()
+    });
+    let container = use_state(|| {
+        let style = style!(
+            r#"
+                display: flex;
+                margin-bottom: 16px;
+                margin-right: 32px;
+                padding: 8px 16px;
+                border-radius: 19px;
+                background: linear-gradient(145deg, #2a3049, #23293d);
+                box-shadow:  8px 8px 16px #171b28,
+                             -8px -8px 16px #373f60;
+            "#
+        ).expect("Failed to create style");
+        style.get_class_name().to_string()
+    });
+    let button_group = use_state(|| {
+        let style = style!(
+            r#"
+                padding: 0 8px;
+                display: flex;
+                gap: 0 16px;
+            "#
+        ).expect("Failed to create style");
+        style.get_class_name().to_string()
+    });
+    let percent60w = use_state(|| {
+        let style = style!(
+            r#"
+                width: 60%;
+            "#
+        ).expect("Failed to create style");
+        style.get_class_name().to_string()
+    });
     html!{
         <div>
-            <span class="is-size-3 block">{ "Reporting order" }</span>
-
-            <div class="block">
-                <MembersList leader_id={leader_id.clone()} members={members.to_vec()} on_remove={remove_member} />
-            </div>
-            <div class="columns is-vcentered">
-                <div class="column is-four-fifths">
-                    <input
-                        class="input is-large"
-                        type="text"
-                        placeholder="name"
-                        value={new_member_name.to_string()}
-                        onkeydown={keydown}
-                        oninput={change_new_member_name}
-                    />
-                </div>
-                <div class="column is-half">
-                    <div class="button is-white" onclick={add_member}>
-                        <span class="icon is-large">
-                            <i class="material-icons">{"add"}</i>
-                        </span>
+            <div class={container.to_string()}>
+                <div class={percent60w.to_string()}>
+                    <div class={text_container.to_string()}>
+                        <input
+                            class={input.to_string()}
+                            type="text"
+                            placeholder="Add member"
+                            value={new_member_name.to_string()}
+                            onkeydown={keydown}
+                            oninput={change_new_member_name}
+                        />
+                        <button class={style_ctx.icon_btn.to_string()}>
+                            <span class="icon" onclick={add_member}>
+                                <i class="material-icons">{"add"}</i>
+                            </span>
+                        </button>
                     </div>
                 </div>
+                <div class={button_group.to_string()}>
+                    <button
+                        onclick={new_leader}
+                        class={style_ctx.outline_btn.to_string()}
+                    >
+                        { "Today's Leader" }
+                    </button>
+                    <button
+                        onclick={shuffle_members}
+                        class={style_ctx.outline_btn.to_string() + " secondary"}
+                    >
+                        { "Shuffle" }
+                    </button>
+                </div>
             </div>
-            <div class="block buttons">
-                <button onclick={new_leader} class="button is-primary is-light">{ "Today's Leader" }</button>
-                <button onclick={shuffle_members} class="button is-link is-light">{ "Shuffle order" }</button>
+            <div class={style_ctx.member_list.to_string()}>
+                <MembersList
+                    leader_id={leader_id.clone()}
+                    members={members.to_vec()}
+                    on_remove={remove_member}
+                    on_update_member={update_member}
+                />
             </div>
         </div>
     }

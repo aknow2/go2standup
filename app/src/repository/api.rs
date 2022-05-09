@@ -166,7 +166,11 @@ impl API {
         let query = serde_json::json!(build_query);
         let json = post(query, &self.url()).await;
         let response: GQLResponse<UpdateMemoHolder> = json.into_serde().unwrap();
-        parse_response(response, |d| d.update_memo)
+        parse_response(
+            response, |
+            d|
+            d.update_memo
+        )
     }
     pub async fn fetch_meeting(&self, id: String) -> MeetingResult {
         let variables = fetch_meeting::Variables {
@@ -182,15 +186,22 @@ impl API {
 
     pub async fn update_member(&self, id: String, member: Member) -> MeetingResult {
         let reaction = match member.reaction {
+            ReactionType::ZERO => update_member::ReactionType::ZERO,
             ReactionType::I => update_member::ReactionType::I,
             ReactionType::II => update_member::ReactionType::II,
             ReactionType::III => update_member::ReactionType::III,
+            ReactionType::IV => update_member::ReactionType::IV,
             ReactionType::V => update_member::ReactionType::V,
+            ReactionType::VI => update_member::ReactionType::VI,
+            ReactionType::VII => update_member::ReactionType::VII,
             ReactionType::VIII => update_member::ReactionType::VIII,
-            ReactionType::XIII => update_member::ReactionType::XIII,
-            ReactionType::Thumbup => update_member::ReactionType::Thumbup,
-            ReactionType::Thumbdown => update_member::ReactionType::Thumbdown,
-            _ => update_member::ReactionType::None,
+            ReactionType::IX => update_member::ReactionType::IX,
+            ReactionType::X => update_member::ReactionType::X,
+            ReactionType::THUMBSUP => update_member::ReactionType::THUMBSUP,
+            ReactionType::THUMBSDOWN => update_member::ReactionType::THUMBSDOWN,
+            ReactionType::SMILE => update_member::ReactionType::SMILE,
+            ReactionType::CLAP => update_member::ReactionType::CLAP,
+            ReactionType::NONE => update_member::ReactionType::NONE,
         };
 
         let variables = update_member::Variables {

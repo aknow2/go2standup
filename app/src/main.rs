@@ -2,10 +2,12 @@ mod data;
 mod components;
 mod repository;
 mod ctx;
+use stylist::style;
 use yew::prelude::*;
 use components::prepare_members:: { PrepareMembers };
 use components::parking_lot:: { ParkingLot };
 use components::header:: { Header };
+use ctx::styles::{StyleProvider};
 use ctx::meeting::{MeetingProvider, MeetingContext, MeetingStatus};
 
 #[function_component(HeroLoading)]
@@ -27,17 +29,35 @@ fn hero_loading() -> Html {
 
 #[function_component(MainContents)]
 fn main_contents() -> Html {
+    let root = style!(r#"
+        width: 100%;
+        height: 100%;
+    "#).expect("").get_class_name().to_string();
+    let container = style!(r#"
+        display: flex;
+        width: 100%;
+        height: 100%;
+    "#).expect("").get_class_name().to_string();
+    let left_panel = style!(r#"
+        padding-left: 32px;
+        width: 70%;
+        height: 100%;
+    "#).expect("").get_class_name().to_string();
+    let right_panel = style!(r#"
+        width: 30%;
+        min-width: 320px;
+        height: 100%;
+    "#).expect("").get_class_name().to_string();
+ 
     html! {
-        <div>
+        <div class={root}>
             <Header />
-            <div class="container is-max-widescreen">
-                <div class="columns  is-centered my-2">
-                    <div class="column">
-                        <PrepareMembers/>
-                    </div>
-                    <div class="column">
-                        <ParkingLot />
-                    </div>
+            <div class={container}>
+                <div class={left_panel}>
+                    <PrepareMembers/>
+                </div>
+                <div class={right_panel}>
+                    <ParkingLot />
                 </div>
             </div>
         </div>
@@ -57,9 +77,11 @@ fn app() -> Html {
 #[function_component(Root)]
 fn root() -> Html {
     html! {
-        <MeetingProvider>
-            <App></App>
-        </MeetingProvider>
+        <StyleProvider>
+            <MeetingProvider>
+                <App></App>
+            </MeetingProvider>
+        </StyleProvider>
     }
 }
 

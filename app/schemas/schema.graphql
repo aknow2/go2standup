@@ -1,13 +1,20 @@
 enum ReactionType {
-    None,
-    Thumbup,
-    Thumbdown,
+    NONE,
+    THUMBSUP,
+    THUMBSDOWN,
+    SMILE,
+    CLAP,
+    ZERO,
     I,
     II,
     III,
+    IV,
     V,
+    VI,
+    VII,
     VIII,
-    XIII,
+    IX,
+    X,
 }
 
 type Member {
