@@ -174,7 +174,7 @@ pub fn prepare_members() -> Html {
                     </button>
                     <button
                         onclick={shuffle_members}
-                        class={style_ctx.outline_btn.to_string() + " secondary"}
+                        class={style_ctx.outline_btn.to_string()}
                     >
                         { "Shuffle" }
                     </button>
