@@ -25,11 +25,11 @@ pub fn members_list() -> Html {
                 width: 100%;
                 height: 100%;
                 border: none;
-                padding: 8px;
+                padding: 16px;
                 border-radius: 10px 0px 0px 10px;
-                background: #272D44;
-                box-shadow: inset 5px 5px 10px #171b28,
-                            inset -5px -5px 10px #373f60;
+                background: #20283D;
+                box-shadow: -5px -5px 10px rgba(0,0,0,0.25),
+                            inset 5px 5px 10px rgba(0,0,0,0.25);
                 &:focus {
                   outline: none;
                 }
