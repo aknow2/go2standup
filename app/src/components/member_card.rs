@@ -19,8 +19,8 @@ pub struct FrontProps {
     pub order: usize
 }
 
-fn emoji(reactionType: &ReactionType) -> &'static str {
-    match reactionType {
+fn emoji(reaction_type: &ReactionType) -> &'static str {
+    match reaction_type {
         ReactionType::THUMBSUP => "\u{1F44D}",
         ReactionType::THUMBSDOWN => "\u{1F44E}",
         ReactionType::CLAP => "\u{1F44F}",

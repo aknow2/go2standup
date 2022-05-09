@@ -14,6 +14,7 @@ pub enum ReactionType {
     THUMBSDOWN,
     SMILE,
     CLAP,
+    ZERO,
     I,
     II,
     III,
