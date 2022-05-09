@@ -29,11 +29,13 @@ pub fn style_provider(props: &StyleProviderProps) -> Html {
         let member_card_style = style!(
             r#"
                width: 190px;
-               height: 158px;
-               border-radius: 5px;
-               background: #272D44;
-               box-shadow:  1px 1px 2px #171b28,
-                            -1px -1px 2px #373f60;
+               height: 162px;
+               padding: 2px 8px;
+               border-radius: 16px;
+               background: #2C344A;
+               box-shadow:  1px 1px 2px 0 rgba(0,0,0,0.25),
+                            inset -2px -2px 4px 0 rgba(0, 0, 0, 0.25),
+                            inset 2px 2px 4px 0 rgba(255, 255, 255, 0.2);
             "#
          ).expect("Failed to mount style");
         let member_card = member_card_style.get_class_name().to_string();
@@ -78,6 +80,7 @@ pub fn style_provider(props: &StyleProviderProps) -> Html {
                     border-radius: 50%;
                     border: 0px;
                     outline: none;
+                    box-shadow: 0 0 4px rgba(230, 230, 230, 0.5);
                 }
             "#
         ).expect("Failed to create style");
@@ -95,8 +98,10 @@ pub fn style_provider(props: &StyleProviderProps) -> Html {
                 align-items: center;
                 &:active {
                     background-color: rgba(230, 230, 230, 0.5);
+                    border-radius: 2px;
                     border: 0px;
                     outline: none;
+                    box-shadow: 0 0 8px rgba(230, 230, 230, 0.5);
                 }
             "#
         ).expect("Failed to create style");
