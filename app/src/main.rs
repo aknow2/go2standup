@@ -12,18 +12,17 @@ use ctx::meeting::{MeetingProvider, MeetingContext, MeetingStatus};
 
 #[function_component(HeroLoading)]
 fn hero_loading() -> Html {
+    let container = style!(r#"
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    "#).expect("Failed to convert css").get_class_name().to_string();
     html!(
-        <section class="hero is-fullheight">
-            <div class="hero-body">
-                <div class="container">
-                    <div class="columns is-centered">
-                        <div class="column is-half">
-                            <progress class="progress is-large is-primary" max="100">{"80%"}</progress>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
+        <div class={container}>
+            <div class="loader"></div>
+        </div>
     )
 }
 
