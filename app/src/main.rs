@@ -12,18 +12,17 @@ use ctx::meeting::{MeetingProvider, MeetingContext, MeetingStatus};
 
 #[function_component(HeroLoading)]
 fn hero_loading() -> Html {
+    let container = style!(r#"
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    "#).expect("Failed to convert css").get_class_name().to_string();
     html!(
-        <section class="hero is-fullheight">
-            <div class="hero-body">
-                <div class="container">
-                    <div class="columns is-centered">
-                        <div class="column is-half">
-                            <progress class="progress is-large is-primary" max="100">{"80%"}</progress>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
+        <div class={container}>
+            <div class="loader"></div>
+        </div>
     )
 }
 
@@ -32,11 +31,13 @@ fn main_contents() -> Html {
     let root = style!(r#"
         width: 100%;
         height: 100%;
+        display: flex;
+        flex-direction: column;
     "#).expect("").get_class_name().to_string();
     let container = style!(r#"
         display: flex;
         width: 100%;
-        height: 100%;
+        height: 90%;
     "#).expect("").get_class_name().to_string();
     let left_panel = style!(r#"
         padding-left: 32px;
@@ -48,10 +49,11 @@ fn main_contents() -> Html {
         min-width: 320px;
         height: 100%;
     "#).expect("").get_class_name().to_string();
- 
     html! {
         <div class={root}>
-            <Header />
+            <div>
+                <Header />
+            </div>
             <div class={container}>
                 <div class={left_panel}>
                     <PrepareMembers/>

@@ -58,16 +58,51 @@ pub fn front(FrontProps { is_leader, member, on_remove, order, on_flip }: &Front
         })
     };
 
-    let header_content = match is_leader {
-        true => html! {
-            <Typography size={TextSize::H3}>
-                <i class="material-icons">{"flag"}</i>
-            </Typography> },
-        false => html! {<Typography size={TextSize::H3}>{ order }</Typography>},
+    let crown_content = match is_leader {
+        true => {
+            let style = style!(r#"
+                position: absolute;
+                padding: 0;
+                color: #FF8C00;
+                left: 0px;
+                top: -24px;
+                transform: rotate(-0.1turn);
+                &::before,
+                &::after {
+                    position: absolute;
+                    right: 0;
+                    top: 0;
+                    width: 0;
+                    height: 0;
+                    content: "";
+                }
+                &::before {
+                    top: -12px;
+                    border: 15px solid transparent;
+                    border-bottom: 30px solid currentColor;
+                }
+                &::after {
+                    top: 5px;
+                    border: 14px solid transparent;
+                    border-left: 15px solid currentColor;
+                    border-right: 15px solid currentColor;
+                }
+            "#).expect("failed to convert css");
+            html! {
+                <div class={style.get_class_name().to_string()}></div>
+            }
+        },
+        false => html! {},
     };
+
+    let crown_style = use_state(|| {
+
+    });
+
     let card_header = use_state(|| {
         let s = style!(
             r#"
+                position: relative;
                 padding: 4px;
                 width: 100%;
                 display: flex;
@@ -99,8 +134,9 @@ pub fn front(FrontProps { is_leader, member, on_remove, order, on_flip }: &Front
     html!{
         <div>
             <div class={&*card_header}>
+                { crown_content }
                 <div>
-                    {header_content}       
+                    <Typography size={TextSize::H3}>{ order }</Typography>
                 </div>
                 <div>
                     <button class={style_ctx.icon_btn.to_string()} onclick={on_remove_member}>

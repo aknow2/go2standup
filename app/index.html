@@ -2,10 +2,8 @@
 <html lang="en">
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <style>
-    
     * {
       padding: 0;
       margin: 0;
@@ -18,6 +16,57 @@
       width: 100%;
       height: 100%;
     }
+    .loader {
+      border-radius: 50%;
+      background-color: #03A688;
+      width: 100px;
+      height: 100px;
+      overflow: hidden;
+      position: relative;
+      box-shadow: 6px 6px 12px rgba(0,0,0,0.6),
+                  inset 10px 10px 20px rgba(0,0,0,0.15),
+                  inset -10px -10px 30px rgba(0,0,0,0.4);
+    }
+
+    .loader::before  {
+      content: '';
+      width: 140px;
+      height: 140px;
+      position: absolute;
+      top: 0;
+      left: 50%;
+      background-color: #272D44;
+    }
+
+    .loader::before {
+      border-radius: 40%;
+      background: rgba(0x27, 0x2d, 0x44, 1);
+      animation: wave 5s linear infinite;
+    }
+
+    .loader::after {
+      border-radius: 47%;
+      background: rgba(0x27, 0x2d, 0x44, .1);
+      animation: wave2 5s linear infinite;
+    }
+
+  @keyframes wave {
+    0% {
+      transform: translate(-50%,  140px) rotate(0deg);
+    }
+    100% {
+      transform: translate(-50%, -140px) rotate(720deg);
+    }
+  }
+
+  @keyframes wave2 {
+    0% {
+      transform: translate(-50%,  140px) rotate(0deg);
+    }
+    100% {
+      transform: translate(-50%, -140px) rotate(-720deg);
+    }
+  }
   </style>
 </head>
 <body>
