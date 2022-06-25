@@ -7,7 +7,7 @@ use std::{result::Result};
 use serde:: { Serialize, Deserialize };
 
 pub type MeetingSchema = Schema<QueryRoot, MutationRoot, SubscriptionRoot>;
-#[derive(Enum, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Enum, Copy, Clone, Eq, PartialEq, Serialize, Deserialize, Debug)]
 pub enum ReactionType {
     NONE,
     THUMBSUP,
@@ -27,7 +27,7 @@ pub enum ReactionType {
     X,
 }
 
-#[derive(Clone, SimpleObject, Serialize, Deserialize)]
+#[derive(Clone, SimpleObject, Serialize, Deserialize, Debug)]
 pub struct Member {
     id: ID,
     name: String,
@@ -41,12 +41,19 @@ pub struct InputMember {
     reaction: ReactionType,
 }
 
-#[derive(Clone, SimpleObject, Serialize, Deserialize)]
+#[derive(Clone, SimpleObject, Serialize, Deserialize, Debug)]
 pub struct Meeting {
     id: ID,
     leader_id: Option<String>,
     members: Vec<Member>,
     memo: String,
+}
+
+#[derive(Debug, Clone, Union, Serialize, Deserialize)]
+#[serde(tag = "__typename")]
+enum NotificationEvent {
+    MEETING(Meeting),
+    REACTION(Member),
 }
 
 pub type Storage = Mutex<redis::Client>;
@@ -98,6 +105,15 @@ async fn save_meeting(ctx: &Context<'_>, id: String,mut cb: impl FnMut(Meeting) 
                 )
             })?;
         pipe.set(&id, json_str.clone()).ignore().query(con)?;
+        let json_str: String = serde_json::to_string(
+                &NotificationEvent::MEETING(new_meeting.clone())
+            )
+            .or_else(|_| {
+                print!("Failed to convert json: NotificationEvent");
+                Err(
+                    RedisError::from((ErrorKind::TypeError, "Failed to covert json"))
+                )
+            })?;
         con.publish::<String, String, i32>(id.to_string(), json_str).unwrap();
         Ok(Some(new_meeting))
     });
@@ -116,6 +132,7 @@ async fn save_meeting(ctx: &Context<'_>, id: String,mut cb: impl FnMut(Meeting) 
 }
 
 pub type CreateMeetingResult = Result<Meeting, String>;
+pub type ReactionResult = Result<bool, String>;
 pub struct MutationRoot;
 
 #[Object]
@@ -152,6 +169,27 @@ impl MutationRoot {
             meeting.members.push(member);
             Ok(meeting)
         }).await
+    }
+    async fn select_reaction(
+        &self,
+        ctx: &Context<'_>,
+        #[graphql(desc = "id of the meeting")] id: String,
+        #[graphql(desc = "member")] member: InputMember,
+    ) -> ReactionResult {
+        let storage = ctx.data_unchecked::<Storage>().lock().await;
+        let mut conn = storage
+            .get_connection()
+            .or_else(|_| Err(String::from("Failed to connect storage")))?;
+        let json_str = serde_json::to_string(
+            &NotificationEvent::REACTION(
+                Member {
+                    id: member.id,
+                    name: member.name,
+                    reaction: member.reaction,
+                })
+            ).or_else(|_| Err(String::from("Failed to convert json")))?;
+        conn.publish::<String, String, i32>(id.to_string(), json_str).unwrap();
+        Ok(true)
     }
     async fn update_member(&self,
         ctx: &Context<'_>,
@@ -246,9 +284,8 @@ impl MutationRoot {
 pub struct SubscriptionRoot;
 #[Subscription]
 impl SubscriptionRoot {
-    async fn meeting(&self, ctx: &Context<'_>, #[graphql(desc = "Id of meeting")] id: String) -> impl Stream<Item = Result<Meeting, String>> {
+    async fn notification(&self, ctx: &Context<'_>, #[graphql(desc = "Id of meeting")] id: String) -> impl Stream<Item = Result<NotificationEvent, String>> {
         let storage = ctx.data_unchecked::<Storage>().lock().await;
-
         let client = storage.clone();
         println!("start subscribe {:?}", &id);
         async_stream::stream! {
@@ -258,8 +295,9 @@ impl SubscriptionRoot {
             while let Some(next) = pubsub_stream.next().await {
                 let payload : String = next.get_payload().unwrap();
                 println!("channel meeting '{:?}' ", &id);
-                let meeting: Meeting = serde_json::from_str(&payload).unwrap();
-                yield Ok(meeting);
+                let event: NotificationEvent = serde_json::from_str(&payload).unwrap();
+                println!("received data {:?}", &event);
+                yield Ok(event);
             }
         }
     }

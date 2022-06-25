@@ -1,12 +1,21 @@
 subscription SubscribeMeeting($id: String!) {
   meeting (id: $id) {
-    id
-    leaderId
-    members{
+    ... on Meeting {
+      __typename
+      id
+      leaderId
+      members{
+        id
+        name
+        reaction
+      }
+      memo
+    }
+    ... on Member {
+      __typename
       id
       name
       reaction
     }
-    memo
   }
 }

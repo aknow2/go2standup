@@ -1,5 +1,5 @@
 use crate::data;
-use crate::data::meeting::{ErrorMsg, AddMemberHolder, Member, RemoveMemberHolder, UpdateMemberHolder, UpdateMemoHolder, ReactionType, ShuffleMembersHolder, NewLeaderHolder};
+use crate::data::meeting::{ErrorMsg, AddMemberHolder, Member, RemoveMemberHolder, UpdateMemberHolder, UpdateMemoHolder, ReactionType, ShuffleMembersHolder, NewLeaderHolder, NotificationEventHolder, NotificationEvent};
 use crate::repository::gql_protocol::{connection_init_msg, subscribe_msg, RecivedMsg};
 use graphql_client::{GraphQLQuery};
 use wasm_bindgen::prelude::Closure;
@@ -24,8 +24,9 @@ async fn post(query: serde_json::Value, url:&str) -> JsValue {
 }
 
 pub type MeetingResult = Result<Meeting, Vec<ErrorMsg>>;
-type ParseResCB<T> = fn(T) -> Meeting;
-fn parse_response<T>(response: GQLResponse<T>, get_value: ParseResCB<T>)-> MeetingResult {
+pub type NotificationResult = Result<NotificationEvent, Vec<ErrorMsg>>;
+type ParseResCB<T, R> = fn(T) -> R;
+fn parse_response<T, R>(response: GQLResponse<T>, get_value: ParseResCB<T, R>)-> Result<R, Vec<ErrorMsg>> {
     if let Some(data) = response.data {
         let meeting = get_value(data);
         return Ok(meeting);
@@ -271,16 +272,16 @@ impl API {
         parse_response(response, |d| d.new_leader)
     }
 
-    pub fn subscribe_meeting(&self, id: String, mut cb: Box<dyn FnMut(MeetingResult)>)  {
+    pub fn subscribe_meeting(&self, id: String, mut cb: Box<dyn FnMut(NotificationResult)>)  {
 
         let ws = WebSocket::new_with_str(&self.ws(), "graphql-ws").unwrap();
         {
             let onmessage_callback = Closure::wrap(
             Box::new(move |e: MessageEvent| {
                     log::info!("Received data {:?}", e.data());
-                    let msg: RecivedMsg<MeetingHolder> = serde_json::from_str(&e.data().as_string().unwrap()).unwrap();
+                    let msg: RecivedMsg<NotificationEventHolder> = serde_json::from_str(&e.data().as_string().unwrap()).unwrap();
                     if let Some(payload) = msg.payload {
-                        cb(parse_response(payload, |holder| holder.meeting));
+                        cb(parse_response(payload, |holder| holder.notification));
                     }
                 }) as Box<dyn FnMut(MessageEvent)>
             );

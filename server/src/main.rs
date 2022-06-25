@@ -7,7 +7,7 @@ use axum::http::{Method};
 use axum::response::{self, IntoResponse};
 use axum::routing::{get};
 use axum::{extract::Extension, Router, Server};
-use tower_http::cors::{CorsLayer, Origin};
+use tower_http::cors::{CorsLayer, Origin, Any, AnyOr};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use crate::models::meeting::{MeetingSchema, MutationRoot, QueryRoot, SubscriptionRoot, Storage};
 use serde::Deserialize;
@@ -26,7 +26,7 @@ async fn graphql_playground() -> impl IntoResponse {
 #[derive(Deserialize, Debug)]
 struct EnvConfig {
   redis_url: String,
-  allow_origin: String,
+  allow_origin: Option<String>,
 }
 
 #[tokio::main]
@@ -49,19 +49,20 @@ async fn main() {
     let schema = Schema::build(QueryRoot, MutationRoot, SubscriptionRoot)
         .data(Storage::from(client))
         .finish();
-    
+    let allow_origin: AnyOr<Origin>= match config.allow_origin {
+        Some(url) => Origin::exact(url.parse().unwrap()).into(),
+        None => Any.into(),
+    };
     let app = Router::new()
         .route("/", get(graphql_playground).post(graphql_handler))
         .route("/ws", GraphQLSubscription::new(schema.clone()))
         .layer(
             CorsLayer::new()
-                .allow_origin(Origin::exact(config.allow_origin.parse().unwrap()))
+                .allow_origin(allow_origin)
                 .allow_methods(vec![Method::GET, Method::POST, Method::OPTIONS, Method::HEAD]),
         )
         .layer(Extension(schema));
-
     println!("Playground: http://localhost:7070");
-
     Server::bind(&"0.0.0.0:7070".parse().unwrap())
         .serve(app.into_make_service())
         .await

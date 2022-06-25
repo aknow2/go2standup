@@ -2,7 +2,11 @@ use std::{rc::Rc};
 
 use wasm_bindgen_futures::spawn_local;
 use yew::prelude::*;
-use crate::{data::meeting:: { Member, ErrorMsg }, repository::{storage::{get_meeting_id, set_meeting_id}, api::{MeetingResult, API}}};
+use crate::{
+    data::meeting:: { Member, ErrorMsg, ReactionType, NotificationEvent },
+    repository::{storage::{get_meeting_id, set_meeting_id},
+    api::{MeetingResult, API, NotificationResult
+}}};
 pub enum MeetingActions {
     StartMeeting(Option<String>),
     UpdateMember(Member),
@@ -65,6 +69,27 @@ pub enum MeetingStatus {
     Ready,
 }
 
+struct ReactionChangedEvent {
+    member_id: String,
+    reaction: ReactionType
+}
+
+fn detect_changed_member_reaction(old: Vec<Member>, new_members: Vec<Member>) -> Vec<ReactionChangedEvent> {
+    let changedMembers: Vec<ReactionChangedEvent> = old.iter().filter_map(|old_member| {
+        let member = new_members
+            .iter()
+            .find(|m| m.reaction != old_member.reaction);
+        match member {
+            Some(member) => Some(ReactionChangedEvent {
+                member_id: member.id.to_string(),
+                reaction: member.reaction,
+            }),
+            None => None,
+        }
+    }).collect();
+    changedMembers
+}
+
 impl MeetingContext {
     fn new(state: UseStateHandle<MeetingState>, api: Rc<API>) -> MeetingContext {
         MeetingContext {
@@ -115,9 +140,15 @@ impl MeetingContext {
                     let new_state = start_meeting(id, &state, &my.api).await;
                     log::info!("start meeting {:?}", new_state);
                     let api = Rc::clone(&my.api);
-                    let func = Box::new(move |result: MeetingResult | {
+                    let func = Box::new(move |result: NotificationResult | {
                         log::info!("subscribe {:?}", result);
-                        my.received_meeting_result(result);
+                        match result {
+                            Ok(result) => match result {
+                                NotificationEvent::MEETING(m) => my.received_meeting_result(Ok(m)),
+                                NotificationEvent::REACTION(_) => (),
+                            },
+                            Err(e) => my.received_meeting_result(Err(e)),
+                        };
                     });
                     if let Some(id) = &new_state.id {
                         api.subscribe_meeting(id.to_string(), func);
