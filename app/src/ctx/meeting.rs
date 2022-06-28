@@ -69,27 +69,6 @@ pub enum MeetingStatus {
     Ready,
 }
 
-struct ReactionChangedEvent {
-    member_id: String,
-    reaction: ReactionType
-}
-
-fn detect_changed_member_reaction(old: Vec<Member>, new_members: Vec<Member>) -> Vec<ReactionChangedEvent> {
-    let changedMembers: Vec<ReactionChangedEvent> = old.iter().filter_map(|old_member| {
-        let member = new_members
-            .iter()
-            .find(|m| m.reaction != old_member.reaction);
-        match member {
-            Some(member) => Some(ReactionChangedEvent {
-                member_id: member.id.to_string(),
-                reaction: member.reaction,
-            }),
-            None => None,
-        }
-    }).collect();
-    changedMembers
-}
-
 impl MeetingContext {
     fn new(state: UseStateHandle<MeetingState>, api: Rc<API>) -> MeetingContext {
         MeetingContext {
@@ -121,11 +100,8 @@ impl MeetingContext {
             Err(msg) => {
                 log::error!("{:?}", msg);
                 state.set(MeetingState {
-                    id: state.id.clone(),
-                    members: state.members.to_vec(),
-                    memo: state.memo.to_string(),
-                    leader_id: state.leader_id.clone(),
                     error_msgs: Some(msg),
+                    ..(*state).clone()
                 })
             },
         }
@@ -144,8 +120,8 @@ impl MeetingContext {
                         log::info!("subscribe {:?}", result);
                         match result {
                             Ok(result) => match result {
-                                NotificationEvent::MEETING(m) => my.received_meeting_result(Ok(m)),
-                                NotificationEvent::REACTION(_) => (),
+                                NotificationEvent::Meeting(m) => my.received_meeting_result(Ok(m)),
+                                NotificationEvent::Reaction(_) => (),
                             },
                             Err(e) => my.received_meeting_result(Err(e)),
                         };

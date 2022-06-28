@@ -73,10 +73,10 @@ pub struct Meeting {
 }
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
-#[serde(rename_all = "camelCase", tag = "__typename")]
+#[serde(rename_all = "PascalCase", tag = "__typename")]
 pub enum NotificationEvent {
-    MEETING(Meeting),
-    REACTION(Member),
+    Meeting(Meeting),
+    Reaction(Member),
 }
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]

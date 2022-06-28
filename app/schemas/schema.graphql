@@ -50,6 +50,8 @@ type Mutation {
     newLeader(id: String): Meeting
 }
 
+union NotificationEvent = Meeting | Member
+
 type Subscription {
-  meeting(id: String): Meeting
+  notification(id: String): NotificationEvent
 }

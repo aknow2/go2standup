@@ -1,7 +1,7 @@
 subscription SubscribeMeeting($id: String!) {
-  meeting (id: $id) {
+  notification (id: $id) {
+    __typename
     ... on Meeting {
-      __typename
       id
       leaderId
       members{
@@ -12,7 +12,6 @@ subscription SubscribeMeeting($id: String!) {
       memo
     }
     ... on Member {
-      __typename
       id
       name
       reaction

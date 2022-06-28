@@ -29,7 +29,7 @@ pub fn members_list() -> Html {
         <nav class={style_ctx.header.to_string()}>
             <div>
                 <p>
-                    {"Standup board"}
+                    {"LIVEN"}
                 </p>
             </div>
             <div>
